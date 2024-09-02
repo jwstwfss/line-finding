@@ -18,26 +18,18 @@ from guis_helpers import display_images_in_DS9
 # http://ds9.si.edu/doc/ref/xpa.html#lock    
 
 
-def showSpec2D_PASSAGE(parno, obid, path_to_data=""):
+def showSpec2D_PASSAGE(parno, obid, path_to_spec2D=''):
     """Display spec2D cutouts in DS9.
 
     This can handle missed data in a given filter since there is a key
     to check against given the nature of how the spec2D files are setup.
     Frames will be made for missing data but will show nothing to indicate
     that the data is missing and that display layout is preserved.
+
+    Modified by AA on Sep 2024 to allow flexible directory structures
     """
 
-    try:
-        secats = glob(path_to_data + "/Par" + str(parno) + "/DATA/DIRECT_GRISM/Par*phot*.fits")  # MDR 2022/05/17
-    except:
-        secats = glob(path_to_data + "/Par" + str(parno) + "/Products/Par*phot*.fits")  # KVN allowing for different path structure (?)
-
-    
-
-    def parse_filename(path_to_data, parno, obid):
-        return path_to_data + f"Par{parno}/spec2D/Par{parno}_{obid:05d}.2D.fits"
-
-    spec2D_file = parse_filename(path_to_data, parno, obid)
+    spec2D_file = path_to_spec2D + f'Par{parno}_{obid:05d}.2D.fits'
 
     # for a given data file extract the data information that we want to be displayed in ds9
     spec2D_key_DS9 = extract_image_extensions_key(spec2D_file)
@@ -120,12 +112,15 @@ def find_file(directory, filename):
     return None
 
 
-def showDirect_PASSAGE(parno, path_to_data=""):
-    """Displays direct images for each of the filters"""
+def showDirect_PASSAGE(parno, path_to_drizzled_images='', path_to_region_files=''):
+    '''
+    Displays direct images for each of the filters
+    Modified by AA on Sep 2024 to allow flexible directory structures
+    '''
 
     ### KVN's quick fix to images having different names in different fields
     # specify the images to be displayed in DS9
-    grism_file = glob(path_to_data + '/Par'+str(parno)+'/DATA/*gr150*_drz_sci.fits')
+    grism_file = glob(path_to_drizzled_images + '*gr150*_drz_sci.fits')
     grism_file_ext = grism_file[0].split('_')[1]
 
 
@@ -148,40 +143,18 @@ def showDirect_PASSAGE(parno, path_to_data=""):
         ],
     }
 
-#     # find the full paths of the direct images
-#     image_paths = {}
-#     for filter_name, filenames in images.items():
-#         paths = []
-#         for filename in filenames:
-#             full_path = find_file(path_to_data, filename)
-#             # print(full_path)
-#             if full_path:
-#                 paths.append(full_path)
-#             else:
-#                 print(f"Warning: File {filename} not found.")
-#                 paths.append(None)
-#         image_paths[filter_name] = paths
-
-
-    #### KVN assuming some path structure because this doesn't work for me...
-    # find the full paths of the direct images
     image_paths = {}
     for filter_name, filenames in images.items():
         paths = []
         for filename in filenames:
-            full_path = find_file(path_to_data, filename)
-            # print(full_path)
+            full_path = find_file(path_to_drizzled_images, filename)
             if full_path:
                 paths.append(full_path)
             else:
-                print(f"Warning: File {filename} not found; assuming it lives in path_to_data/data/Par#/DATA.")
-                full_path = find_file(path_to_data + '/Par'+str(parno)+'/DATA/', filename)
-                paths.append(full_path)
-                print(paths)
+                print(f"Warning: File {filename} not found.")
+                paths.append(None)
                 
         image_paths[filter_name] = paths
-
-    
 
     # specify the region files to show along with images, if any.
     region_files = {
@@ -195,15 +168,12 @@ def showDirect_PASSAGE(parno, path_to_data=""):
     for filter_name, filenames in region_files.items():
         paths = []
         for filename in filenames:
-            full_path = find_file(path_to_data, filename)
-            # print(full_path)
+            full_path = find_file(path_to_region_files, filename)
             if full_path:
                 paths.append(full_path)
             else:
-                # KVN: assuming same pathing structure
-                print(f"Warning: File {filename} not found; assuming it lives in path_to_data/data/Par#/DATA.")
-                full_path = find_file(path_to_data + '/Par'+str(parno)+'/DATA/', filename)
-                paths.append(full_path)
+                print(f'Warning: File {filename} not found.')
+                paths.append(None)
                 
         region_paths[filter_name] = paths
 
@@ -229,113 +199,60 @@ def panDirect_PASSAGE(ra, dec):
 
 # written by KVN June 2024
 # First pull info from region file
-def getRegionFileInfo(parno, filt, path_to_data):
+def getRegionFileInfo(parno, filt, path_to_region_files):
+    '''
+    Modified by AA on Sep 2024 to allow flexible directory structures
+    '''
 
-        if os.path.exists(path_to_data + '/Par'+str(parno)+'/DATA/Par'+str(parno)+str(filt)+'_grism.reg'):
-                df = pd.read_csv(path_to_data + '/Par'+str(parno)+'/DATA/Par'+str(parno)+str(filt)+'_grism.reg', sep=' ', engine='python', header=None)
-        
-                # pull the id and x & y coord from the region file
-                obj_ids = [i for i in df[3].apply(lambda z: int(z.split('=')[-1].strip('}{')))]
-                obj_xs = df[0].apply(lambda z: literal_eval(z.lstrip('box'))[0])
-                obj_ys = df[0].apply(lambda z: literal_eval(z.lstrip('box'))[1])
-        else:
-                print('No region file found for panning to object')
-                obj_ids = None; obj_xs = None; obj_ys = None
+    region_file_name = path_to_region_files + f'Par{parno}{filt}_grism.reg'
+    if os.path.exists(region_file_name):
+            df = pd.read_csv(region_file_name, sep=' ', engine='python', header=None)
 
-        return obj_ids, obj_xs, obj_ys
+            # pull the id and x & y coord from the region file
+            obj_ids = [i for i in df[3].apply(lambda z: int(z.split('=')[-1].strip('}{')))]
+            obj_xs = df[0].apply(lambda z: literal_eval(z.lstrip('box'))[0])
+            obj_ys = df[0].apply(lambda z: literal_eval(z.lstrip('box'))[1])
+    else:
+            print('No region file found for panning to object')
+            obj_ids = None; obj_xs = None; obj_ys = None
+
+    return obj_ids, obj_xs, obj_ys
 
 # written by KVN June 2024
 # Second, use info from region file to pan to each grism
-def panDispersed_PASSAGE(objid, parno, path_to_data):
+def panDispersed_PASSAGE(objid, parno, path_to_drizzled_images, path_to_region_files):
+    '''
+    Modified by AA on Sep 2024 to allow flexible directory structures
+    '''
 
-    grism_file = glob(path_to_data + '/Par'+str(parno)+'/DATA/*gr150*_drz_sci.fits')
+    grism_file = glob(path_to_drizzled_images + '*gr150*_drz_sci.fits')
     grism_file_ext = grism_file[0].split('_')[1]
 
     ds9_title = "PASSAGE_DIRECT"
     # since tiles are already assigned, setup by tile rather than grism
-    if os.path.exists(path_to_data + '/Par'+str(parno)+'/DATA/Par'+str(parno)+'_'+str(grism_file_ext)+ '_f115w-gr150c_drz_sci.fits'):
-        fno = 2
-        obj_ids, obj_xs, obj_ys = getRegionFileInfo(parno=parno, path_to_data=path_to_data, filt='F115c')
-        
-        # specify the frame
-        cmd = f"xpaset -p {ds9_title} frame " + str(fno)
-        os.system(cmd)
 
-        # pan to the coords from the region file for obj with objid
-        get_ind = [i for i in range(len(obj_ids)) if obj_ids[i] == objid]
-        cmd = "xpaset -p PASSAGE_DIRECT pan to %f %f " % (obj_xs[get_ind[0]], obj_ys[get_ind[0]])
-        os.system(cmd)
-        cmd = "xpaset -p PASSAGE_DIRECT pan to %f %f " % (obj_xs[get_ind[0]], obj_ys[get_ind[0]])
-        os.system(cmd)
+    # AA added looping over filters and orientations to reduce blocks of code
+    filters = ['115', '150', '200']
+    orients = ['r', 'c']
+    fno_dict = {'115c':2, '115r':3, '150c':5, '150r':6, '200c':8, '200r':9}
 
+    for thisfilter in filters:
+        for thisorient in orients:
+            thisfile = path_to_drizzled_images + f'Par{parno}_{grism_file_ext}_f{thisfilter}w-gr150{thisorient}_drz_sci.fits'
+            if os.path.exists(thisfile):
+                fno = fno_dict[f'{thisfilter}{thisorient}']
+                obj_ids, obj_xs, obj_ys = getRegionFileInfo(parno=parno, path_to_region_files=path_to_region_files, filt=f'{thisfilter}{thisorient}')
 
-    if os.path.exists(path_to_data + '/Par'+str(parno)+'/DATA/Par'+str(parno)+'_'+str(grism_file_ext)+ '_f115w-gr150r_drz_sci.fits'):
-        fno = 3
-        obj_ids, obj_xs, obj_ys = getRegionFileInfo(parno=parno, path_to_data=path_to_data, filt='F115r')
+                # specify the frame
+                cmd = f"xpaset -p {ds9_title} frame " + str(fno)
+                os.system(cmd)
 
-        # specify the frame
-        cmd = f"xpaset -p {ds9_title} frame " + str(fno)
-        os.system(cmd)
-
-        # pan to the coords from the region file for obj with objid
-        get_ind = [i for i in range(len(obj_ids)) if obj_ids[i] == objid]
-        cmd = "xpaset -p PASSAGE_DIRECT pan to %f %f " % (obj_xs[get_ind[0]], obj_ys[get_ind[0]])
-        os.system(cmd)
-
-
-    if os.path.exists(path_to_data + '/Par'+str(parno)+'/DATA/Par'+str(parno)+'_'+str(grism_file_ext)+ '_f150w-gr150c_drz_sci.fits'):
-        fno = 5
-        obj_ids, obj_xs, obj_ys = getRegionFileInfo(parno=parno, path_to_data=path_to_data, filt='F150c')
-
-        # specify the frame
-        cmd = f"xpaset -p {ds9_title} frame " + str(fno)
-        os.system(cmd)
-
-        # pan to the coords from the region file for obj with objid
-        get_ind = [i for i in range(len(obj_ids)) if obj_ids[i] == objid]
-        cmd = "xpaset -p PASSAGE_DIRECT pan to %f %f " % (obj_xs[get_ind[0]], obj_ys[get_ind[0]])
-        os.system(cmd)
-    
-    if os.path.exists(path_to_data + '/Par'+str(parno)+'/DATA/Par'+str(parno)+'_'+str(grism_file_ext)+ '_f150w-gr150r_drz_sci.fits'):
-        fno = 6
-        obj_ids, obj_xs, obj_ys = getRegionFileInfo(parno=parno, path_to_data=path_to_data, filt='F150r')
-
-        # specify the frame
-        cmd = f"xpaset -p {ds9_title} frame " + str(fno)
-        os.system(cmd)
-
-        # pan to the coords from the region file for obj with objid
-        get_ind = [i for i in range(len(obj_ids)) if obj_ids[i] == objid]
-        cmd = "xpaset -p PASSAGE_DIRECT pan to %f %f " % (obj_xs[get_ind[0]], obj_ys[get_ind[0]])
-        os.system(cmd)
-
-    if os.path.exists(path_to_data + '/Par'+str(parno)+'/DATA/Par'+str(parno)+'_'+str(grism_file_ext)+ '_f200w-gr150c_drz_sci.fits'):
-        fno = 8
-        obj_ids, obj_xs, obj_ys = getRegionFileInfo(parno=parno, path_to_data=path_to_data, filt='F200c')
-
-        # specify the frame
-        cmd = f"xpaset -p {ds9_title} frame " + str(fno)
-        os.system(cmd)
-
-        # pan to the coords from the region file for obj with objid
-        get_ind = [i for i in range(len(obj_ids)) if obj_ids[i] == objid]
-        cmd = "xpaset -p PASSAGE_DIRECT pan to %f %f " % (obj_xs[get_ind[0]], obj_ys[get_ind[0]])
-        os.system(cmd)
-
-    if os.path.exists(path_to_data + '/Par'+str(parno)+'/DATA/Par'+str(parno)+'_'+str(grism_file_ext)+ '_f200w-gr150r_drz_sci.fits'):
-        fno = 9
-        obj_ids, obj_xs, obj_ys = getRegionFileInfo(parno=parno, path_to_data=path_to_data, filt='F200r')
-
-        # specify the frame
-        cmd = f"xpaset -p {ds9_title} frame " + str(fno)
-        os.system(cmd)
-
-        # pan to the coords from the region file for obj with objid
-        get_ind = [i for i in range(len(obj_ids)) if obj_ids[i] == objid]
-        cmd = "xpaset -p PASSAGE_DIRECT pan to %f %f " % (obj_xs[get_ind[0]], obj_ys[get_ind[0]])
-        os.system(cmd)
-
-
+                # pan to the coords from the region file for obj with objid
+                get_ind = [i for i in range(len(obj_ids)) if obj_ids[i] == objid]
+                cmd = "xpaset -p PASSAGE_DIRECT pan to %f %f " % (obj_xs[get_ind[0]], obj_ys[get_ind[0]])
+                os.system(cmd)
+                cmd = "xpaset -p PASSAGE_DIRECT pan to %f %f " % (obj_xs[get_ind[0]], obj_ys[get_ind[0]])
+                os.system(cmd)
 
 # written by KVN June 2024
 # DO NOT use this one. Most of below was testing. Faster/Better to get the coords from the region file
@@ -454,17 +371,10 @@ def panDispersed_PASSAGE_doNOTuse(ra, dec, parno, path_to_wisp=""):
             os.system(cmd)
         
 
-def show2dNEW(
-    grism,
-    parno,
-    obid,
-    zeroarr,
-    user,
-    trans,
-    zran1=None,
-    zran2=None,
-    path_to_data=" ",
-):
+def show2dNEW(grism, parno, obid, zeroarr, user, trans, args, zran1=None, zran2=None):
+    '''
+    AA modified function header and body to include path variables as attributes of args
+    '''
     # In version 1.0, will first look for wavelength-calibrated stamps in the G1??_DRIZZLE directories; failing this, will default to old stamps
     # zero and first order positions
     #    firstx = firstarr['x']
@@ -482,59 +392,13 @@ def show2dNEW(
     dims = ()
     zrad = 10.0
     workingdir = os.getcwd()
-    par_root_dir = "/"
-    if path_to_data == " ":
-        dirpts = workingdir.split("/")[1:-1]
-        for pdir in dirpts:
-            par_root_dir = par_root_dir + pdir + "/"
-        # path2dl=par_root_dir + grism + '_DRIZZLE/aXeWFC3_' +grism + '_mef_ID'+str(obid)+'.fits'
-        path2dl = (
-            par_root_dir
-            + "spec2D/Par"
-            + str(parno)
-            + "_"
-            + "{:05d}".format(obid)
-            + ".2D.fits"
-        )
-    else:
-        # path2dl = path_to_data + '/Par' + str(parno) +'/' + grism + '_DRIZZLE/aXeWFC3_' +grism + '_mef_ID'+str(obid)+'.fits'
-        path2dl = (
-            path_to_data
-            + "Par"
-            + str(parno)
-            + "/spec2D/Par"
-            + str(parno)
-            + "_"
-            + "{:05d}".format(obid)
-            + ".2D.fits"
-        )
 
-    if os.path.exists(path2dl) == 1:
+    path2dl = (args.data_dir + args.spec2D_file_path + f'Par{parno}_{obid:05d}.2D.fits')
+
+    if os.path.exists(path2dl):
         path2d = path2dl
     else:
-        if path_to_data == " ":
-            path2d = (
-                par_root_dir
-                + "spec2D/Par"
-                + str(parno)
-                + "_"
-                + grism
-                + "_BEAM_"
-                + str(obid)
-                + "A.fits"
-            )
-        else:
-            # path2d = path_to_data + '/Par' + str(parno) + '/Stamps/Par' + str(parno) + '_'+grism+'_BEAM_'+str(obid)+'A.fits'
-            path2d = (
-                path_to_data
-                + "Par"
-                + str(parno)
-                + "/spec2D/Par"
-                + str(parno)
-                + "_"
-                + "{:05d}".format(obid)
-                + ".2D.fits"
-            )
+        path2d = (args.data_dir + f'Par{parno}/spec2D/Par{parno}_{obid:05d}.2D.fits')
 
     pix_per_um = 1 / (1e-4 * 46.934)  # GR150R 47.015 for GR150C
 
@@ -543,72 +407,25 @@ def show2dNEW(
     if grism == "F200W":
         frameno = "3"
         maglimit = 26.0
-        input_grism = (
-            path_to_data
-            + "Par"
-            + str(parno)
-            + "/DATA/Par"
-            + str(parno)
-            + "_f200w-gr150r_drz_sci.fits"
-        )
+        input_grism = (args.data_dir + args.drizzled_images_path + f'Par{parno}_f200w-gr150r_drz_sci.fits')
         zp_offset = -210
-        obj_offset = (
-            147 + 0.238 * pix_per_um + tweak
-        )  # First number is pixels to blue edge (poorly defined). Second num is wave distance to center in um.
+        obj_offset = (147 + 0.238 * pix_per_um + tweak)  # First number is pixels to blue edge (poorly defined). Second num is wave distance to center in um.
     elif grism == "F150W":
         frameno = "2"
         maglimit = 24.5
-        input_grism = (
-            path_to_data
-            + "Par"
-            + str(parno)
-            + "/DATA/Par"
-            + str(parno)
-            + "_f150w-gr150r_drz_sci.fits"
-        )
+        input_grism = (args.data_dir + args.drizzled_images_path + f'Par{parno}_f150w-gr150r_drz_sci.fits')
         zp_offset = -219 + tweak_zp
         obj_offset = 55 + 0.171 * pix_per_um + tweak
     elif grism == "F115W":
         frameno = "1"
         maglimit = 23.5
-        input_grism = (
-            path_to_data
-            + "Par"
-            + str(parno)
-            + "/DATA/Par"
-            + str(parno)
-            + "_f115w-gr150r_drz_sci.fits"
-        )
+        input_grism = (args.data_dir + args.drizzled_images_path + f'Par{parno}_f115w-gr150r_drz_sci.fits')
         zp_offset = -225.5 + tweak_zp
         obj_offset = -6 + 0.135 * pix_per_um + tweak
 
-    direct1 = (
-        path_to_data
-        + "Par"
-        + str(parno)
-        + "/DATA/"
-        + "Par"
-        + str(parno)
-        + "_f115w_drz_sci.fits"
-    )
-    direct2 = (
-        path_to_data
-        + "Par"
-        + str(parno)
-        + "/DATA/"
-        + "Par"
-        + str(parno)
-        + "_f150w_drz_sci.fits"
-    )
-    direct3 = (
-        path_to_data
-        + "Par"
-        + str(parno)
-        + "/DATA/"
-        + "Par"
-        + str(parno)
-        + "_f200w_drz_sci.fits"
-    )
+    direct1 = (args.data_dir + args.drizzled_images_path + f'Par{parno}_f115w_drz_sci.fits')
+    direct2 = (args.data_dir + args.drizzled_images_path + f'Par{parno}_f150w_drz_sci.fits')
+    direct3 = (args.data_dir + args.drizzled_images_path + f'Par{parno}_f200w_drz_sci.fits')
 
     if os.path.exists(direct1) == 1:
         input_direct = direct1
@@ -709,13 +526,9 @@ def show2dNEW(
     #    cy = (cy - hdr['CRPIX2'])*hdr['CDELT2'] + hdr['CRVAL2']
     #    rad = 5 * hdr['CD1_1']
 
-    if path_to_data != " ":
-        par_root_dir = path_to_data + "/Par" + str(parno) + "/"
-    outcoo = (
-        par_root_dir + "Spectra/temp_zero_coords_%s_" % user + str(frameno) + ".reg"
-    )
+    outcoo = (args.data_dir + args.spec1D_file_path + "temp_zero_coords_%s_" % user + str(frameno) + ".reg")
 
-    if os.path.exists(outcoo) == 1:
+    if os.path.exists(outcoo):
         os.unlink(outcoo)
     f = open(outcoo, "w")
     # f.write('wcs;\n')
@@ -759,133 +572,33 @@ def show2dNEW(
 
     # COMMENTING OUT ZERO ORDER DISPLAY -END
 
-    ### THIS WAS ALL FOR THE OLD TRANSFORMATION ###
-    #    matchind=0
-    #    i=0
-    #    for fid in firstid:
-    #        if fid==obid:
-    #            matchind=i
-    #            break
-    #        i=i+1
-    #    xmin=firstx[matchind]-firstlen[matchind]/2.0
-    #    xmax=firstx[matchind]+firstlen[matchind]/2.0
-    #    ymin=firsty[matchind]-firstwid[matchind]/2.0
-    #    ymax=firsty[matchind]+firstwid[matchind]/2.0
-    #
-    #    numzer=0
-    #    if len(dims)>0:
-    #        xdim=float(max(dims))
-    #        ydim=float(min(dims))
-    #    outcoo=par_root_dir+"Spectra/temp_zero_coords.reg"
-    #    if os.path.exists(outcoo)==1:
-    #        os.unlink(outcoo)
-    #    coordout=open(outcoo,'w')
-    #    print >>coordout, "image"
-    #    for j in range(len(zerox)):
-    #        # MB: use dims of stamp, rather than size of 1st order in region file
-    #        if zerox[j] >= (firstx[matchind] - xdim/2.) and \
-    #           zerox[j] <= (firstx[matchind] + xdim/2.) and \
-    #           zeroy[j] >= (firsty[matchind] - ydim/2.) and \
-    #           zeroy[j] <= (firsty[matchind] + ydim/2.) and grism=='G102':
-    ##    	if zerox[j]>=(xmin-zrad) and zerox[j]<=(xmax+zrad) and zeroy[j]>=(ymin-zrad) and zeroy[j]<=(ymax+zrad) and grism=='G102':
-    #    		print >>coordout, "circle(%.2f,%.2f,5.0) # text={%s}" % (zerox[j]/1.7-firstx[matchind]/1.7+212./2.0-13,zeroy[j]/1.6-firsty[matchind]/1.6+ydim/2.0+3.6,zeroid[j])
-    #
-    #        elif zerox[j] >= (firstx[matchind] - xdim/2.) and \
-    #             zerox[j] <= (firstx[matchind] + xdim/2.) and \
-    #             zeroy[j] >= (firsty[matchind] - ydim/2.) and \
-    #             zeroy[j] <= (firsty[matchind] + ydim/2.) and grism=='G141':
-    ##    	elif  zerox[j]>=(xmin-zrad) and zerox[j]<=(xmax+zrad) and zeroy[j]>=(ymin-zrad) and zeroy[j]<=(ymax+zrad) and grism=='G141':
-    #    		print >>coordout, "circle(%.2f,%.2f,5.0) # text={%s}" % (zerox[j]/1.7-firstx[matchind]/1.7+184./2.0,zeroy[j]/1.6-firsty[matchind]/1.6+ydim/2.0+0.6,zeroid[j])
-    #    numzer=numzer+1
-    #    coordout.close()
-
-    # if trans == "log":
-    #     zscale = "log"
-    # else:
-    #     zscale = "linear"
-    # cmd = "xpaset -p ds9 frame " + frameno
-    # os.system(cmd)
-    # cmd = "xpaset -p ds9 file " + path2d + "[" + str(cutout_index) + "]"
-    # os.system(cmd)
-    # cmd = "xpaset -p ds9 scale limits " + str(zran1) + " " + str(zran2)
-    # os.system(cmd)
-    # cmd = "xpaset -p ds9 scale " + zscale
-    # os.system(cmd)
-
-    # cmd='xpaset -p ds9 zoom to fit'
-    # os.system(cmd)
-    # HAVE COMMENTED OUT overplotting of some REGIONS files
-
-    #  if test[0] != []:
-    # cmd = (
-    #     "xpaset -p ds9 regions file " + outcoo
-    # )  # par_root_dir+ 'Spectra/temp_zero_coords_%s.reg'%user
-    # os.system(cmd)
-
-    # MR
-
-    #  if frameno=='1':
-    #     cmd='xpaset -p ds9 regions file '+par_root_dir+ 'Spectra/G102_trace.reg'
-    #  if frameno=='2':
-    #     cmd='xpaset -p ds9 regions file '+par_root_dir+ 'Spectra/G141_trace.reg'
-    #  os.system(cmd)
     return
 
 
-def showDirectNEW(obid, parno, g102zeroarr, load_image=False, path_to_data=" "):
+def showDirectNEW(obid, parno, g102zeroarr, path_to_drizzled_images, load_images=False):
     """
     Removed lineno, which was only used to check whether the images
     should be reloaded.
+    AA modified function header and body to include path variables as attributes of args
     """
     obid = int(obid)
     workingdir = os.getcwd()
     dirpts = workingdir.split("/")[1:-1]
-    par_root_dir = "/"
-    if path_to_data == " ":
-        for pdir in dirpts:
-            par_root_dir = par_root_dir + pdir + "/"
-    else:
-        par_root_dir = path_to_data + "Par" + str(parno) + "/"
 
-    path2direct = par_root_dir + "DATA/"
-    path110 = path2direct + "Par" + str(parno) + "_f115w_drz_sci.fits"
-    path140 = path2direct + "Par" + str(parno) + "_f150w_drz_sci.fits"
-    path160 = path2direct + "Par" + str(parno) + "_f200w_drz_sci.fits"
-    path140cat = path2direct + "DIRECT_GRISM/" + "Par" + str(parno) + "photcat.fits"
-    path160cat = path2direct + "fin_F160.cat"
-    path110cat = path2direct + "fin_F110.cat"
+    path110 = path_to_drizzled_images + f"Par{parno}_f115w_drz_sci.fits"
+    path140 = path_to_drizzled_images + f"Par{parno}_f150w_drz_sci.fits"
+    path160 = path_to_drizzled_images + f"Par{parno}_f200w_drz_sci.fits"
 
-    # print(obid)
     inputx = g102zeroarr["x"]
     inputy = g102zeroarr["y"]
 
-    if (
-        os.path.exists(path110) == 0
+    if (os.path.exists(path110) == 0
         and os.path.exists(path140) == 0
         and os.path.exists(path160) == 0
     ):
         print("No Direct Images Found.")
         return 0
-    # For PASSAGE have just the one object catalog. Feeding it in from measure_z_interactive, not read in here.
-    # Cutting this section
 
-    #        if os.path.exists(path140cat)==1:
-    #        infHcat=open(path140cat,'r')
-    #    elif os.path.exists(path160cat)==1:
-    #        infHcat=open(path160cat,'r')
-    #    elif os.path.exists(path110cat)==1:
-    # if no Hband, use F110 for catalog
-    #        infHcat=open(path110cat,'r')
-    #    else:
-    #        return 0
-    xcen, ycen = -1, -1
-    #   for line in infHcat:
-    #       if line[0]!='#':
-    #           entries=line.split()
-    #          if int(entries[1])==obid:
-    #             xcenter,ycenter=float(entries[7]),float(entries[8])
-    #             hexcoo=[entries[7],entries[8]]
-    # infHcat.close()
     hexcoo = [str(inputx[obid - 1]), str(inputy[obid - 1])]
 
     # Added getting PA angle of each image.
@@ -953,36 +666,23 @@ def showDirectNEW(obid, parno, g102zeroarr, load_image=False, path_to_data=" "):
     panDirect(hexcoo[0], hexcoo[1])
 
 
-def showDispersed(obid, parno, load_image=False, path_to_data=" "):  # MB
+def showDispersed(obid, parno, path_to_dispersed, load_image=False):  # MB
     """
     Removed lineno, which was only used to check whether the images
     should be reloaded.
+    AA modified function header and body to include path variables as attributes of args
     """
     obid = int(obid)
     workingdir = os.getcwd()
     dirpts = workingdir.split("/")[1:-1]
-    par_root_dir = "/"
-    # for pdir in dirpts:
-    #    par_root_dir= par_root_dir +pdir + '/'
 
-    if path_to_data == " ":
-        for pdir in dirpts:
-            par_root_dir = par_root_dir + pdir + "/"
-    else:
-        par_root_dir = path_to_data + "/Par" + str(parno) + "/"
-
-    path2dispersed = par_root_dir + "Spectra/DATA/DIRECT_GRISM/"
     ### Using G102.fits instead of G102_drz.fits ###
-    path102 = (
-        path2dispersed + "Par" + str(parno) + "_" + str(obid).zfill(5) + ".2D.fits"
-    )
-    path141 = (
-        path2dispersed + "Par" + str(parno) + "_" + str(obid).zfill(5) + ".2D.fits"
-    )
-    path102_0reg = os.path.join(path2dispersed, "G102_0th.reg")
-    path102_1reg = os.path.join(path2dispersed, "G102_1st.reg")
-    path141_0reg = os.path.join(path2dispersed, "G141_0th.reg")
-    path141_1reg = os.path.join(path2dispersed, "G141_1st.reg")
+    path102 = (path_to_dispersed + "Par" + str(parno) + "_" + str(obid).zfill(5) + ".2D.fits")
+    path141 = (path_to_dispersed + "Par" + str(parno) + "_" + str(obid).zfill(5) + ".2D.fits")
+    path102_0reg = os.path.join(path_to_dispersed, "G102_0th.reg")
+    path102_1reg = os.path.join(path_to_dispersed, "G102_1st.reg")
+    path141_0reg = os.path.join(path_to_dispersed, "G141_0th.reg")
+    path141_1reg = os.path.join(path_to_dispersed, "G141_1st.reg")
     if os.path.exists(path102) == 0 and os.path.exists(path141) == 0:
         print("Looking for objects here: ", path102)
         print("No Grism Images Found.")
@@ -1135,38 +835,29 @@ def panDispersed(xx, yy, grism="G141"):  # MB
     os.system(cmd)
 
 
-def reloadReg():
-    workingdir = os.getcwd()
-    dirpts = workingdir.split("/")[1:-1]
-    par_root_dir = "/"
-    for pdir in dirpts:
-        par_root_dir = par_root_dir + pdir + "/"
-
+def reloadReg(region_file_path):
+    '''
+    Modified by AA on Sep 2024 to allow flexible directory structures
+    '''
     # reload direct image region files
-    if os.path.exists(par_root_dir + "DATA/DIRECT_GRISM/F110_drz.reg") == 1:
+    # AA modified below to reduce blocks of code
+
+    region_file1 = region_file_path + f'F110_drz.reg'
+    region_file2 = region_file_path + f'F160_drz.reg'
+    region_file3 = region_file_path + f'F140_drz.reg'
+
+    if os.path.exists(region_file1):
         cmd = "xpaset -p ds9 frame 3"
         os.system(cmd)
-        cmd = (
-            "xpaset -p ds9 regions file "
-            + par_root_dir
-            + "DATA/DIRECT_GRISM/F110_drz.reg"
-        )
+        cmd = (f"xpaset -p ds9 regions file {thisregion_file}")
         os.system(cmd)
-    if os.path.exists(par_root_dir + "DATA/DIRECT_GRISM/F160_drz.reg") == 1:
+
+    if os.path.exists(region_file2): thisregion_file = region_file2
+    elif os.path.exists(region_file3): thisregion_file = region_file3
+    else: thisregion_file = None
+
+    if thisregion_file is not None:
         cmd = "xpaset -p ds9 frame 4"
         os.system(cmd)
-        cmd = (
-            "xpaset -p ds9 regions file "
-            + par_root_dir
-            + "DATA/DIRECT_GRISM/F160_drz.reg"
-        )
-        os.system(cmd)
-    elif os.path.exists(par_root_dir + "DATA/DIRECT_GRISM/F140_drz.reg") == 1:
-        cmd = "xpaset -p ds9 frame 4"
-        os.system(cmd)
-        cmd = (
-            "xpaset -p ds9 regions file "
-            + par_root_dir
-            + "DATA/DIRECT_GRISM/F140_drz.reg"
-        )
+        cmd = (f"xpaset -p ds9 regions file {thisregion_file}")
         os.system(cmd)

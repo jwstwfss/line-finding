@@ -5,7 +5,10 @@ from passage_analysis import *
 from astropy.table import Table
 from astropy.io import ascii as asc
 
-def find_cwt(lam, flux, err, zeros, fwhm_est_pix, beam_name, config_pars, plotflag = True):
+def find_cwt(lam, flux, err, fwhm_est_pix, beam_name, config_pars, plotflag = True):
+    '''
+    AA removed 'zeros' from the function definition as it seemed to be an unused variable
+    '''
 
     cont_medfilt = int(config_pars['cont_medfilt']) # window for median filter
     max_width = config_pars['maxwidth'] * fwhm_est_pix
@@ -140,207 +143,102 @@ def find_cwt(lam, flux, err, zeros, fwhm_est_pix, beam_name, config_pars, plotfl
 
     return [lam[real_peaks], flux[real_peaks], npix_real, snr_real, cwarray, cont_filter, lam[peaks], flux[peaks]]
 
-def loop_field_cwt(path_to_data, path_to_code, parno):
+def loop_field_cwt(parno, args):
     # no inputs and run from inside the data directory
     # KVN updating this to write the linelist to the 'output' directory... take path to data as input
-    if os.path.exists('linelist') == False:
-        os.mkdir('linelist')
+    # AA updated this, for flexibility, to take args as input, which contains the directory structure
+    if not os.path.exists(args.output_dir + args.linelist_path):
+        os.mkdir(args.output_dir + args.linelist_path)
 
-    print('Looking for spectra here: ', str(path_to_data)+'Par'+str(parno)+'/Spectra/*G115_1D.dat')
-    g115files = glob(str(path_to_data)+'Par'+str(parno)+'/Spectra/*G115_1D.dat') # looking for 3 spectra for PASSAGE
+    print('Looking for spectra here: ', str(args.data_dir) + ags.spec1D_path)
+    g115files = glob(str(args.data_dir) + ags.spec1D_path + '*G115_1D.dat') # looking for 3 spectra for PASSAGE
     g115files.sort()
-    g150files = glob(str(path_to_data)+'Par'+str(parno)+'/Spectra/*G150_1D.dat')
+    g150files = glob(str(args.data_dir) + ags.spec1D_path + '*G150_1D.dat')
     g150files.sort()
-    g200files = glob(str(path_to_data)+'Par'+str(parno)+'/Spectra/*G200_1D.dat')
-    g200files.sort()
 
     # M.D.R. - 10/08/2020
-    print('')
-    print('Searching for default.config at: ' + str(path_to_code))
-    config_pars = read_config(str(path_to_code)+'/default.config')
-    
-    print('Searching for catalogs at: ' + str(path_to_data) +'Par'+str(parno)+'/DATA/DIRECT_GRISM/Par'+str(parno)+'_phot*.fits')
-    catalogs = glob(str(path_to_data) +'Par'+str(parno)+'/DATA/DIRECT_GRISM/Par'+str(parno)+'_phot*.fits') # get list of available catalogs
+    print(f'\nSearching for default.config at: {args.code_dir}')
+    config_pars = read_config(str(args.code_dir) + '/default.config')
+
+    photcat_file_path = str(args.data_dir) + args.photcat_file_path + f'Par{parno}_phot*.fits'
+    print(f'Searching for catalogs at: {photcat_file_path}')
+    catalogs = glob(photcat_file_path) # get list of available catalogs
     catalogs.sort()
-    print('')
-    print('I found the following catalogs: ' + str(catalogs))
-    cat = Table.read(catalogs[0])
-    print('')
-    print('Catalog opened successfully: ' + str(catalogs[0]))
-#     print('')
-#     print(cat)
-#     print('')
-#     print(cat.info)
-#     print('')
-#     print(cat.colnames)
-    # M.D.R. - 10/08/2020
 
-    if len(catalogs) > 1:
-        cat2 = Table.read(catalogs[1])
+    print(f'\nI found the following catalogs: {catalogs}')
+    cat = Table.read(catalogs[0])
+
+    print(f'\nCatalog opened successfully: {catalogs[0]}')
+    # M.D.R. - 10/08/2020
 
     a_images = cat['a_image']
     beam_se = cat['id']
     
-    outfile = open('linelist/temp', 'w')
-    #config_pars['transition_wave'] = 11700.
+    outfile = open(args.output_dir + args.linelist_path + 'temp', 'w')
     config_pars['transition_wave'] = 13000. # MDR 2022/08/16
 
-    print('')
-    print('Searching for grism files...')
+    print('\nSearching for grism files...')
 
-    for filename in g115files:
-        print('starting obj id = ', filename)
-        # get spectral data
-        spdata = asc.read(filename, names = ['lambda', 'flux', 'ferror', 'contam', 'zero'])
-        trimmed_spec = trim_spec(spdata, None, None, config_pars)
+    # looping over all three PASSAGE filters
+    filters = ['115', '150', '200']
+    for index, thisfilter in enumerate(filters):
+        print(f'Doing filter G{thisfilter} which is {index + 1} out of {len(filters)} filters..')
+        thisfilter_files = glob(str(args.data_dir) + ags.spec1D_path + f'*{thisfilter}_1D.dat')
+        thisfilter_files.sort()
 
-        # look up the object in the se catalog and grab the a_image
-        beam = float(filename.split('_')[1].split('.')[0])
-        parno = parno #os.getcwd().split('/')[-2].split('Par')[-1] # fixed parallel field number to zero for the mudf program
-        print('Par Number: ', parno)
+        # looping over all spectra files of the current filter
+        for filename in thisfilter_files:
+            print('starting obj id = ', filename)
+            # get spectral data
+            spdata = asc.read(filename, names = ['lambda', 'flux', 'ferror', 'contam', 'zero'])
+            trimmed_spec = trim_spec(spdata, None, None, config_pars)
 
-        w = np.where(beam_se == beam)
-        w = w[0] # because of tuples
-        a_image = a_images[w][0]
-        fwhm_est_pix = a_image * 2.0
+            # look up the object in the se catalog and grab the a_image
+            beam = float(filename.split('_')[1].split('.')[0])
+            parno = parno #os.getcwd().split('/')[-2].split('Par')[-1] # fixed parallel field number to zero for the mudf program
+            print('Par Number: ', parno)
 
-        # unpack spectrum and check that it is long enough to proceed
-        lam = trimmed_spec[0]
-        flux_corr = trimmed_spec[1] - trimmed_spec[3]
-        err = trimmed_spec[2]
-        zeros = trimmed_spec[4]
+            w = np.where(beam_se == beam)
+            w = w[0] # because of tuples
+            a_image = a_images[w][0]
+            fwhm_est_pix = a_image * 2.0
 
-        if len(lam) < config_pars['min_spec_length']:
-            continue
+            # unpack spectrum and check that it is long enough to proceed
+            lam = trimmed_spec[0]
+            flux_corr = trimmed_spec[1] - trimmed_spec[3]
+            err = trimmed_spec[2]
 
-        # cwt it and unpack and write results
-        g115_cwt = find_cwt(lam, flux_corr, err, zeros, fwhm_est_pix, str(int(beam)), config_pars, plotflag=False)
-        lam_cwt = g115_cwt[0]
-        flam_cwt = g115_cwt[1]
-        npix_cwt = g115_cwt[2]
-        snr_cwt = g115_cwt[3]
+            if len(lam) < config_pars['min_spec_length']:
+                continue
 
-        for i in np.arange(len(lam_cwt)):
-            #print(beam, 'G102', lam_cwt[i], npix_cwt[i], fwhm_est_pix, snr_cwt[i])
-            print(beam, 'G115', lam_cwt[i], npix_cwt[i], fwhm_est_pix, snr_cwt[i])
-            outfile.write(str(parno)+'  G115  ' + str(int(beam)) + '  ' + str(lam_cwt[i]) + '  ' + str(npix_cwt[i]) + '  ' + str(snr_cwt[i]) + '\n')
-
-        if config_pars['n_sigma_for_2pix_lines'] != False:
-            config_pars['npix_thresh'] = 2
-            config_pars['n_sigma_above_cont'] = config_pars['n_sigma_for_2pix_lines']
-            g115_cwt = find_cwt(lam, flux_corr, err, zeros, fwhm_est_pix, str(int(beam)), config_pars, plotflag=False)
-            lam_cwt = g115_cwt[0]
-            flam_cwt = g115_cwt[1]
-            npix_cwt = g115_cwt[2]
-            snr_cwt = g115_cwt[3]
-            for i in np.arange(len(lam_cwt)):
-                #print(beam, 'G102', lam_cwt[i], npix_cwt[i], fwhm_est_pix, snr_cwt[i])
-                print(beam, 'G115', lam_cwt[i], npix_cwt[i], fwhm_est_pix, snr_cwt[i])
-                outfile.write(str(parno)+'  G115  ' +str(int(beam)) + '  ' + str(lam_cwt[i]) + '  ' + str(npix_cwt[i]) + '  ' + str(snr_cwt[i]) + '\n')
-
-        # go back to the beginning with the old config pars
-        config_pars = read_config(str(path_to_code)+'/default.config')
-        #config_pars['transition_wave'] = 11700.
-        config_pars['transition_wave1'] = 13000. # MDR 2022/08/16
-
-    #config_pars['transition_wave'] = 11100.
-    config_pars['transition_wave1'] = 13000. # MDR 2022/08/16
-
-    for filename in g150files:
-        print('starting obj id = ', filename)
-        spdata = asc.read(filename, names = ['lambda', 'flux', 'ferror', 'contam', 'zero'])
-        trimmed_spec = trim_spec(None, spdata, None, config_pars)
-        beam = float(filename.split('_')[1].split('.')[0])
-        parno = os.getcwd().split('/')[-2].split('Par')[-1] # fixed parallel field number to zero for the mudf program
-        w = np.where(beam_se == beam)
-        w = w[0]    # because of tuples
-        a_image = a_images[w][0]
-        lam = trimmed_spec[0]
-        flux_corr = trimmed_spec[1] - trimmed_spec[3]
-        err = trimmed_spec[2]
-        zeros = trimmed_spec[4]
-
-        if len(lam) < config_pars['min_spec_length']:
-            continue
-        fwhm_est_pix = a_image * 2
-        config_pars
-
-        g150_cwt = find_cwt(lam, flux_corr, err, zeros, fwhm_est_pix,str(int(beam)), config_pars, plotflag=False)
-        lam_cwt = g150_cwt[0]
-        flam_cwt = g150_cwt[1]
-        npix_cwt = g150_cwt[2]
-        snr_cwt = g150_cwt[3]
-
-        for i in np.arange(len(lam_cwt)):
-            print(beam, 'G150', lam_cwt[i], npix_cwt[i], fwhm_est_pix, snr_cwt[i])
-            outfile.write(str(parno)+'  G150  ' + str(int(beam)) + '  ' + str(lam_cwt[i]) + '  ' + str(npix_cwt[i]) + '  ' + str(snr_cwt[i]) + '\n')
-
-        if config_pars['n_sigma_for_2pix_lines'] != False:
-            config_pars['npix_thresh'] = 2
-            config_pars['n_sigma_above_cont'] = config_pars['n_sigma_for_2pix_lines']
-            g150_cwt= find_cwt(lam, flux_corr, err, zeros, fwhm_est_pix, str(int(beam)), config_pars, plotflag=False)
-            lam_cwt = g150_cwt[0]
-            flam_cwt = g150_cwt[1]
-            npix_cwt = g150_cwt[2]
-            snr_cwt = g150_cwt[3]
+            # cwt it and unpack and write results
+            thisfilter_cwt = find_cwt(lam, flux_corr, err, fwhm_est_pix, str(int(beam)), config_pars, plotflag=False)
+            lam_cwt = thisfilter_cwt[0]
+            flam_cwt = thisfilter_cwt[1]
+            npix_cwt = thisfilter_cwt[2]
+            snr_cwt = thisfilter_cwt[3]
 
             for i in np.arange(len(lam_cwt)):
-                print(beam, 'G150', lam_cwt[i], npix_cwt[i], snr_cwt[i])
-                outfile.write(str(parno)+'  G150  ' + str(int(beam)) + '  ' + str(lam_cwt[i]) + '  ' + str(npix_cwt[i]) + '  ' + str(snr_cwt[i]) + '\n')
+                print(beam, f'G{thisfilter}', lam_cwt[i], npix_cwt[i], fwhm_est_pix, snr_cwt[i])
+                outfile.write(f'{parno}  {thisfilter}  {int(beam)}  {lam_cwt[i]}  {npix_cwt[i]}  {snr_cwt[i]}\n')
 
-        # go back to the beginning with the old config pars
-        config_pars = read_config(str(path_to_code)+'/default.config')
-        #config_pars['transition_wave'] = 11200.
-        config_pars['transition_wave'] = 13000. # MDR 2022/08/16
+            if config_pars['n_sigma_for_2pix_lines'] != False:
+                config_pars['npix_thresh'] = 2
+                config_pars['n_sigma_above_cont'] = config_pars['n_sigma_for_2pix_lines']
+                thisfilter_cwt = find_cwt(lam, flux_corr, err, fwhm_est_pix, str(int(beam)), config_pars, plotflag=False)
+                lam_cwt = thisfilter_cwt[0]
+                flam_cwt = thisfilter_cwt[1]
+                npix_cwt = thisfilter_cwt[2]
+                snr_cwt = thisfilter_cwt[3]
+                for i in np.arange(len(lam_cwt)):
+                    print(beam, f'G{thisfilter}', lam_cwt[i], npix_cwt[i], fwhm_est_pix, snr_cwt[i])
+                    outfile.write(f'{parno}  {thisfilter}  {int(beam)}  {lam_cwt[i]}  {npix_cwt[i]}  {snr_cwt[i]}\n')
 
-    for filename in g200files:
-        print('starting obj id = ', filename)
-        spdata = asc.read(filename, names = ['lambda', 'flux', 'ferror', 'contam', 'zero'])
-        trimmed_spec = trim_spec(None, None, spdata, config_pars)
-        beam = float(filename.split('_')[1].split('.')[0])
-        parno = parno # fixed parallel field number to zero for the mudf program
-        w = np.where(beam_se == beam)
-        w = w[0]    # because of tuples
-        a_image = a_images[w][0]
-        lam = trimmed_spec[0]
-        flux_corr = trimmed_spec[1] - trimmed_spec[3]
-        err = trimmed_spec[2]
-        zeros = trimmed_spec[4]
+            # go back to the beginning with the old config pars
+            config_pars = read_config(str(args.code_dir)+'/default.config')
+            config_pars['transition_wave1'] = 13000. # MDR 2022/08/16
 
-        if len(lam) < config_pars['min_spec_length']:
-            continue
-        fwhm_est_pix = a_image * 2
-        config_pars
-
-        g200_cwt = find_cwt(lam, flux_corr, err, zeros, fwhm_est_pix,str(int(beam)), config_pars, plotflag=False)
-        lam_cwt = g200_cwt[0]
-        flam_cwt = g200_cwt[1]
-        npix_cwt = g200_cwt[2]
-        snr_cwt = g200_cwt[3]
-
-        for i in np.arange(len(lam_cwt)):
-            print(beam, 'G200', lam_cwt[i], npix_cwt[i], fwhm_est_pix, snr_cwt[i])
-            outfile.write(str(parno)+'  G200  ' + str(int(beam)) + '  ' + str(lam_cwt[i]) + '  ' + str(npix_cwt[i]) + '  ' + str(snr_cwt[i]) + '\n')
-
-        if config_pars['n_sigma_for_2pix_lines'] != False:
-            config_pars['npix_thresh'] = 2
-            config_pars['n_sigma_above_cont'] = config_pars['n_sigma_for_2pix_lines']
-            g200_cwt= find_cwt(lam, flux_corr, err, zeros, fwhm_est_pix, str(int(beam)), config_pars, plotflag=False)
-            lam_cwt = g200_cwt[0]
-            flam_cwt = g200_cwt[1]
-            npix_cwt = g200_cwt[2]
-            snr_cwt = g200_cwt[3]
-
-            for i in np.arange(len(lam_cwt)):
-                print(beam, 'G200', lam_cwt[i], npix_cwt[i], snr_cwt[i])
-                outfile.write(str(parno)+'  G200  ' + str(int(beam)) + '  ' + str(lam_cwt[i]) + '  ' + str(npix_cwt[i]) + '  '+ str(snr_cwt[i]) + '\n')
-
-        # go back to the beginning with the old config pars
-        config_pars = read_config(str(path_to_code)+'/default.config')
-        #config_pars['transition_wave'] = 11200.
-        config_pars['transition_wave'] = 13000. # MDR 2022/08/16
-
-    tab = asciitable.read('linelist/temp', format = 'no_header')
+    tab = asciitable.read(args.output_dir + args.linelist_path + 'temp', format = 'no_header')
     par = tab['col1']
     grism = tab['col2']
     beam = tab['col3']
@@ -355,106 +253,24 @@ def loop_field_cwt(path_to_data, path_to_code, parno):
     snr = snr[s]
     par = par[0]
     beams_unique = np.unique(beam)
-    outfile = open('linelist/Par'+str(par) + 'lines.dat', 'w')
+    outfile = open(args.output_dir + args.linelist_path + f'Par{par}lines.dat', 'w')
 
     for b in beams_unique:
-        # do the g102 for b
-        w = (beam == b) & (grism == 'G115')
-        waves_obj = wave[w]
-        npix_obj = npix[w]
-        snr_obj = snr[w]
-        waves_uniq, ind = np.unique(waves_obj, return_index = True)
-        npix_uniq = npix_obj[ind]
-        snr_uniq = snr_obj[ind]
-        s = np.argsort(waves_uniq)
-        waves_final_g115 = waves_uniq[s]
-        npix_final_g115 = npix_uniq[s]
-        snr_final_g115 = snr_uniq[s]
+        # AA adding a loop over filters, instead of separate blocks of code per filter
+        for thisfilter in filters:
+            w = (beam == b) & (grism == f'G{thisfilter}')
+            waves_obj = wave[w]
+            npix_obj = npix[w]
+            snr_obj = snr[w]
+            waves_uniq, ind = np.unique(waves_obj, return_index = True)
+            npix_uniq = npix_obj[ind]
+            snr_uniq = snr_obj[ind]
+            s = np.argsort(waves_uniq)
+            waves_final_thisfilter = waves_uniq[s]
+            npix_final_thisfilter = npix_uniq[s]
+            snr_final_thisfilter = snr_uniq[s]
 
-        for lam, npx, sn in zip(waves_final_g115, npix_final_g115, snr_final_g115):
-            outfile.write(str(par) + '  G115  ' + str(b) + '  ' + str(lam) + '  ' + str(npx) + '  ' + str(sn) + '\n')
-
-        # do the g141 for b  
-        w = (beam == b) & (grism == 'G150')
-        waves_obj = wave[w]
-        npix_obj = npix[w]
-        snr_obj = snr[w]
-        waves_uniq, ind = np.unique(waves_obj, return_index = True)
-        npix_uniq = npix_obj[ind]
-        snr_uniq = snr_obj[ind]
-        s = np.argsort(waves_uniq)
-        waves_final_g150 = waves_uniq[s]
-        npix_final_g150 = npix_uniq[s]
-        snr_final_g150 = snr_uniq[s]
-
-        for lam, npx, sn in zip(waves_final_g150, npix_final_g150, snr_final_g150):
-            outfile.write(str(par) + '  G150  ' + str(b) + '  ' + str(lam) + '  ' + str(npx) + '  ' + str(sn) + '\n')
-
-        # KVN: Adding third grism filter: do the g200 for b  
-        w = (beam == b) & (grism == 'G200')
-        waves_obj = wave[w]
-        npix_obj = npix[w]
-        snr_obj = snr[w]
-        waves_uniq, ind = np.unique(waves_obj, return_index = True)
-        npix_uniq = npix_obj[ind]
-        snr_uniq = snr_obj[ind]
-        s = np.argsort(waves_uniq)
-        waves_final_g200 = waves_uniq[s]
-        npix_final_g200 = npix_uniq[s]
-        snr_final_g200 = snr_uniq[s]
-
-        for lam, npx, sn in zip(waves_final_g200, npix_final_g200, snr_final_g200):
-            outfile.write(str(par) + '  G200  ' + str(b) + '  ' + str(lam) + '  ' + str(npx) + '  ' + str(sn) + '\n')
+            for lam, npx, sn in zip(waves_final_thisfilter, npix_final_thisfilter, snr_final_thisfilter):
+                outfile.write(f'{par}  G{thisfilter}  {b}  {lam} {npx} {sn}\n')
 
     outfile.close()
-
-def test_obj_cwt(parno, beamno, configfile):
-    blue_se = asciitable.read('../DATA/DIRECT_GRISM/fin_F110.cat')
-    red_se  = asciitable.read('../DATA/DIRECT_GRISM/fin_F160.cat')
-    a_image_blue = blue_se['col5']
-    a_image_red = red_se['col5']
-    beam_se = blue_se['col2']
-    config_pars = read_config(configfile)
-    bluefile = 'Par'+str(parno) + '_G102_BEAM_'+str(beamno)+'A.dat'
-    redfile =  'Par'+str(parno) + '_G141_BEAM_'+str(beamno)+'A.dat'
-
-    spdata_blue = asciitable.read(bluefile, names = ['lambda', 'flux', 'ferror', 'contam', 'zero'])
-    trimmed_spec_blue= trim_spec(spdata_blue, None, config_pars)
-
-    # do the blue side
-    lam = trimmed_spec_blue[0]
-    flux_corr = trimmed_spec_blue[1] - trimmed_spec_blue[3]
-    err = trimmed_spec_blue[2]
-    zeros = trimmed_spec_blue[4]
-    #config_pars['transition_wave']  = 11700.
-    config_pars['transition_wave'] = 13000. # MDR 2022/08/16
-
-    if len(lam) < config_pars['min_spec_length']:
-        print('Short spec. skip it!')
-    else:
-        w = np.where(beam_se == beamno)
-        w = w[0] # because of tuples
-        a_image = a_image_blue[w][0]
-        fwhm_est_pix = a_image * 2
-        g102_cwt = find_cwt(lam, flux_corr, err, zeros, fwhm_est_pix, str(beamno), config_pars, plotflag=True)
-        print(g102_cwt[0], g102_cwt[1], g102_cwt[2], fwhm_est_pix)
-
-    # do the red side
-    #config_pars['transition_wave'] = 11200.
-    #config_pars['transition_wave'] = 9353. # MDR 2022/08/16
-    spdata_red = asciitable.read(redfile, names = ['lambda', 'flux', 'ferror', 'contam', 'zero'])
-    trimmed_spec_red = trim_spec(None, spdata_red, config_pars)
-    lam = trimmed_spec_red[0]
-    flux_corr = trimmed_spec_red[1] - trimmed_spec_red[3]
-    err = trimmed_spec_red[2]
-    zeros = trimmed_spec_red[4]
-
-    if len(lam) < config_pars['min_spec_length']:
-        print('Short spec. skip it!')
-    else:
-        w = np.where(beam_se == beamno)
-        w = w[0] # because of tuples
-        a_image = a_image_red[w][0]
-        fwhm_est_pix = a_image * 2
-        g141_cwt = find_cwt(lam, flux_corr, err, zeros, fwhm_est_pix, str(beamno), config_pars, plotflag=True)
-        print(g141_cwt[0], g141_cwt[1], g141_cwt[2], fwhm_est_pix)

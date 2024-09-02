@@ -997,46 +997,35 @@ def inspect_object(
     linelistoutfile,
     commentsfile,
     remaining,
-    allobjects,
+    allobjects, args,
+    args,
     show_dispersed=True,
     stored_fits=False,
-    path_to_data=" ",
-    path_to_output=" ",
-    path_to_code=" ",
     orientation='combined',
     comp_fit = False,
     polycont_fit = False,
     lincont_fit = False):
-    
+    '''
+    Modified by AA on Sep 2024 to allow flexible directory structures
+    '''
+
     if verbose == True: print("Running inspect_object...\n")  # MDR 2022/05/17
     """
     An attempt to move all object-specific tasks
     """
     # set up and filenames
-    outdir = "Par%s_output_%s" % (par, user)
+    outdir = args.output_dir + f'Par{par}/Par{par}_output_{user}'
 
-    if path_to_data == " ":
-        specnameg1 = ("Par%i_" + str(obj).zfill(5) + ".G115_1D.dat" % (par)) 
-        specnameg2 = ("Par%i_" + str(obj).zfill(5) + ".G150_1D.dat" % (par))
-        specnameg3 = ("Par%i_" + str(obj).zfill(5) + ".G200_1D.dat" % (par)) 
-        specnameg1_R = ("Par%i_" + str(obj).zfill(5) + ".G115_1D_R.dat" % (par)) 
-        specnameg2_R = ("Par%i_" + str(obj).zfill(5) + ".G150_1D_R.dat" % (par)) 
-        specnameg3_R = ("Par%i_" + str(obj).zfill(5) + ".G200_1D_R.dat" % (par)) 
-        specnameg1_C = ("Par%i_" + str(obj).zfill(5) + ".G115_1D_C.dat" % (par)) 
-        specnameg2_C = ("Par%i_" + str(obj).zfill(5) + ".G150_1D_C.dat" % (par)) 
-        specnameg3_C = ("Par%i_" + str(obj).zfill(5) + ".G200_1D_C.dat" % (par)) 
-
-    else:
-        base_path = path_to_data+ "Par"+ str(par)+ "/Spectra/Par"+ str(par)+ "_" + str(obj).zfill(5)
-        specnameg1 = (base_path + ".G115_1D.dat")
-        specnameg2 = (base_path + ".G150_1D.dat")
-        specnameg3 = (base_path + ".G200_1D.dat")
-        specnameg1_R = (base_path + ".F115W_1D_R.dat")
-        specnameg2_R = (base_path + ".F150W_1D_R.dat")
-        specnameg3_R = (base_path + ".F200W_1D_R.dat")
-        specnameg1_C = (base_path + ".F115W_1D_C.dat")
-        specnameg2_C = (base_path + ".F150W_1D_C.dat")
-        specnameg3_C = (base_path + ".F200W_1D_C.dat")
+    base_path = args.data_dir + args.spec1D_path + f'Par{par}_{obj:05d}'
+    specnameg1 = (base_path + ".G115_1D.dat")
+    specnameg2 = (base_path + ".G150_1D.dat")
+    specnameg3 = (base_path + ".G200_1D.dat")
+    specnameg1_R = (base_path + ".F115W_1D_R.dat")
+    specnameg2_R = (base_path + ".F150W_1D_R.dat")
+    specnameg3_R = (base_path + ".F200W_1D_R.dat")
+    specnameg1_C = (base_path + ".F115W_1D_C.dat")
+    specnameg2_C = (base_path + ".F150W_1D_C.dat")
+    specnameg3_C = (base_path + ".F200W_1D_C.dat")
 
     plottitle = "PASSAGE_%i" % (obj)
     fitdatafilename = os.path.join(outdir, "fitdata/%s_fitspec" % plottitle)
@@ -1097,18 +1086,9 @@ def inspect_object(
 
     # =================== Show spec2d new (begin) =====================
 
-    showSpec2D_PASSAGE(par, obj, path_to_data=path_to_data)
+    showSpec2D_PASSAGE(par, obj, path_to_spec2D=args.data_dir + args.spec2D_path)
 
     # =================== Show spec2d new (end) =====================
-
-    # pan full images to the new object
-    # showDirectNEW(obj, par, g141zeros, path_to_wisp_data=path_to_wisp_data)
-
-    # tbaines: pan full frame image to object of interest (new)
-
-    #     if show_dispersed:
-    #         showDispersed(obj, par, path_to_wisp_data = path_to_wisp_data)
-
     # define parameters for this object
     ra = objinfo["ra"]
     dec = objinfo["dec"]
@@ -1124,7 +1104,7 @@ def inspect_object(
     #panDirect_PASSAGE(x_pix, y_pix)
     ### Updated by KVN because this panning needs to be offset for each grism
     ### See new panDispersed_PASSAGE function in guis.py
-    panDispersed_PASSAGE(obj, parno=par, path_to_data=path_to_data)
+    panDispersed_PASSAGE(obj, parno=par, path_to_drizzled_images=args.data_dir + args.drizzled_images_path, path_to_region_files=args.data_dir + args.region_file_path)
 
     # start with a fresh set of config pars
     config_pars = read_config(path_to_code+"/default.config", availgrism=availgrism)
@@ -1997,8 +1977,7 @@ def inspect_object(
                     obj,
                     g102zeros,
                     user,
-                    "linear",
-                    path_to_data=path_to_data,
+                    "linear", args,
                 )
             if g141zeros is not None:
                 show2dNEW(
@@ -2007,8 +1986,7 @@ def inspect_object(
                     obj,
                     g141zeros,
                     user,
-                    "linear",
-                    path_to_data=path_to_data,
+                    "linear", args,
                 )
 
         # change 2d stamp scaling to log
@@ -2020,8 +1998,7 @@ def inspect_object(
                     obj,
                     g102zeros,
                     user,
-                    "log",
-                    path_to_data=path_to_data,
+                    "log", args,
                 )
             if g141zeros is not None:
                 show2dNEW(
@@ -2030,8 +2007,7 @@ def inspect_object(
                     obj,
                     g141zeros,
                     user,
-                    "log",
-                    path_to_data=path_to_data,
+                    "log", args,
                 )
 
         # change g102 2d stamp scaling to zscale
@@ -2052,10 +2028,9 @@ def inspect_object(
                         obj,
                         g102zeros,
                         user,
-                        "linear",
+                        "linear", args,
                         zran1=z1,
                         zran2=z2,
-                        path_to_data=path_to_data,
                     )
 
         # change g141 2d stamp scaling to zscale
@@ -2076,17 +2051,16 @@ def inspect_object(
                         obj,
                         g141zeros,
                         user,
-                        "linear",
+                        "linear", args,
                         zran1=z1,
                         zran2=z2,
-                        path_to_data=path_to_data,
                     )
 
         # recenter full images
         elif option.strip().lower() == "dc":
-            showDirectNEW(obj, par, g141zeros, path_to_data=path_to_data)
+            showDirectNEW(obj, par, g141zeros, path_to_drizzled_images=args.data_dir + args.drizzled_images_path)
             if show_dispersed:  # MB
-                showDispersed(obj, path_to_data=path_to_data)
+                showDispersed(obj, path_to_dispersed=args.data_dir + args.spec2D_path)
 
         # reload full iamges
         elif option.strip().lower() == "reload":
@@ -2095,14 +2069,14 @@ def inspect_object(
                 par,
                 g141zeros,
                 load_image=True,
-                path_to_data=path_to_data,
+                path_to_drizzled_images=args.data_dir + args.drizzled_images_path,
             )
             if show_dispersed:
-                showDispersed(obj, load_image=True, path_to_data=path_to_data)
+                showDispersed(obj, path_to_dispersed=args.data_dir + args.spec2D_path, load_image=True)
 
         # reload direct image region files
         elif option.strip().lower() == "dr":
-            reloadReg()
+            reloadReg(region_file_path=args.data_dir + args.region_file_path)
 
         # new options dealing with iterating objects
         # can't actually go back or choose another object now,
@@ -2290,60 +2264,27 @@ def check_input_objid(objlist, objid, nextup):
     return objid
 
 
-def measure_z_interactive(
-    linelistfile=" ",
-    path_to_data=" ",
-    path_to_code=" ",
-    show_dispersed=True,
-    path_to_stored_fits=" ",
-    print_colors=True,
-    parno=0):
+def measure_z_interactive(parno, args, linelistfile=None):
+    '''
+    AA modified function header and body to include path variables as attributes of args
+    '''
 
-    if verbose == True:
+    if args.verbose == True:
         print("\nRunning measure_z_interactive...\n")  # MDR 2022/05/17
+
     # turn off color printing to terminal if required
-    if print_colors is False:
+    if not args.print_colors:
         global setcolors
         for k, v in setcolors.iteritems():
             setcolors[k] = "\033[0m"
 
-    if path_to_data == " ":
-        ### running from the Spectra directory
-        path_to_data = "../../"
-
-    # if path_to_stored_fits == ' ':
-    #    use_stored_fits  = False
-    # elif os.path.exists(path_to_stored_fits) :
-    #    use_stored_fits = True
-    #    print 'looking for stored fit data'
-    # else:
-    #    use_stored_fits = False
-    #    print 'not using stored fit data'
-
-    #### STEP 0:   set ds9 window to tile mode ################################
-    ###########################################################################
-    # not the best way to do this, but matching the method in guis.py
-    # cmd = "xpaset -p ds9 tile"
-    # os.system(cmd)
-    # if show_dispersed:
-    #     cmd = "xpaset -p ds9 tile grid layout 3 2"
-    # else:
-    #     cmd = "xpaset -p ds9 tile grid layout 2 2"
-    # os.system(cmd)
-
     #### STEP 1:   get linelist ###############################################
     ###########################################################################
-    if linelistfile == " ":
-        files = glob("linelist/Par"+str(parno)+"lines.dat")
-        if len(files) == 0:
-            print_prompt("No line list file found", prompt_type="interim")
-            return 0
-        else:
-            linelistfile = files[0]
+    if linelistfile is None:
+        linelistfile = args.data_dir + args.linelist_path + f'Par{parno}lines.dat'
+
     if not os.path.exists(linelistfile):
-        print_prompt(
-            "Invalid path to line list file: %s" % (linelistfile), prompt_type="interim"
-        )
+        print_prompt("Invalid path to line list file: %s" % (linelistfile), prompt_type="interim")
         return 0
     else:
         print_prompt("Found line list file: %s" % (linelistfile), prompt_type="interim")
@@ -2351,9 +2292,7 @@ def measure_z_interactive(
     #### STEP 1b:   read the list of candidate lines  ####################
     ###########################################################################
 
-    llin = asciitable.read(
-        linelistfile, names=["parnos", "grism", "objid", "wavelen", "npix", "ston"]
-    )
+    llin = asciitable.read(linelistfile, names=["parnos", "grism", "objid", "wavelen", "npix", "ston"])
 
     parnos = llin["parnos"]
     grism = llin["grism"]
@@ -2367,17 +2306,14 @@ def measure_z_interactive(
 
     #### STEP 2:  set user name and output directory #########################
     ###########################################################################
-    if verbose == True:
+    if args.verbose == True:
         print("")
         print("All outputs will be stored in...\n")  # MDR 2022/05/17
         print(os.getcwd())
         print("")
 
-    tmp = glob(path_to_data + "Par" + str(par) + "/Spectra/*.dat")  # MDR 2022/05/17 and updated KVN 2024/07/31
-    print_prompt(
-        "You are about to inspect emission lines identified in parallel field {}".format(parno),
-        prompt_type="interim",
-    )
+    tmp = glob(args.data_dir + args.spec1D_path + '*.dat')  # MDR 2022/05/17 and updated KVN 2024/07/31, updated AA 2024/09/03
+    print_prompt("You are about to inspect emission lines identified in parallel field {}".format(parno), prompt_type="interim")
     print_prompt("Please enter your name or desired username", prompt_type="interim")
     while True:
         user = input("> ")
@@ -2388,18 +2324,13 @@ def measure_z_interactive(
             break
     user = user.strip().lower()
     # create output directory
-    outdir = "Par%s_output_%s" % (parno, user)
+    outdir = args.output_dir + f'Par{parno}/' + f'Par{parno}_output_{user}' # modified by AA on 2024-09-03 to include full path
     if not os.path.isdir(outdir):
         os.mkdir(outdir)
 
-    # if (verbose == True):
-    #     print('tmp =', tmp) # MDR 2022/05/17
-    #     print('user =', user) # MDR 2022/05/17
-    #     print('outdir =', outdir) # MDR 2022/05/17
-
     #### STEP 3: define filenames and check for partially complete work #####
     #########################################################################
-    if verbose == True:
+    if args.verbose == True:
         print("\nCreating figs and fitdata directories...\n")  # MDR 2022/05/17
     if not os.path.exists(os.path.join(outdir, "figs")):
         os.makedirs(os.path.join(outdir, "figs"))
@@ -2450,26 +2381,18 @@ def measure_z_interactive(
 
     #### STEP 4: create trace.reg files ############################
     #########################################################################
-    if verbose == True:
+    if args.verbose == True:
         print("Creating trace.reg files...\n")  # MDR 2022/05/17
 
-    trace102 = open(
-        path_to_data + "/Par" + str(parno) + "/Spectra/G102_trace.reg", "w"
-    )
-    trace102.write(
-        'global color=green dashlist=8 3 width=1 font="helvetica 10 normal roman" select=1 highlite=1 dash=0 fixed=0 edit=1 move=1 delete=1 include=1 source=1\n'
-    )
+    trace102 = open(args.data_dir + args.spec1D_path + '/G102_trace.reg', 'w')
+    trace102.write('global color=green dashlist=8 3 width=1 font="helvetica 10 normal roman" select=1 highlite=1 dash=0 fixed=0 edit=1 move=1 delete=1 include=1 source=1\n')
     trace102.write("wcs;\n")
     # sensitivity drops below 25% of max at wave < 8250 and wave > 11540
     # so box should be 3290 angstroms wide and be centered at 9895.
     trace102.write("box(9895,0,3290,1,1.62844e-12)\n")
     trace102.close()
-    trace141 = open(
-        path_to_data + "/Par" + str(par) + "/Spectra/G141_trace.reg", "w"
-    )
-    trace141.write(
-        'global color=green dashlist=8 3 width=1 font="helvetica 10 normal roman" select=1 highlite=1 dash=0 fixed=0 edit=1 move=1 delete=1 include=1 source=1\n'
-    )
+    trace141 = open(args.data_dir + args.spec1D_path + 'G141_trace.reg', 'w')
+    trace141.write('global color=green dashlist=8 3 width=1 font="helvetica 10 normal roman" select=1 highlite=1 dash=0 fixed=0 edit=1 move=1 delete=1 include=1 source=1\n')
     trace141.write("wcs;\n")
     # sensitivity drops below 25% of max at wave < 10917 and wave > 16904
     # so box should be 5897 angstroms wide and be centered at 13910.5
@@ -2492,14 +2415,11 @@ def measure_z_interactive(
     #   the output linelist.
     # find all available cats
 
-    try:
-        secats = glob(path_to_data + "/Par" + str(par) + "/DATA/DIRECT_GRISM/Par*phot*.fits")  # MDR 2022/05/17
-    except:
-        secats = glob(path_to_data + "/Par" + str(par) + "/Products/Par*phot*.fits")  # KVN allowing for different path structure (?)
+    secats = glob(args.data_dir + args.photcat_file_path + 'Par*phot*.fits') # AA modified, allowing flexible directory structure
     secats.sort()
     cat = Table.read(secats[0])
 
-    if verbose == True:
+    if args.verbose == True:
         print("I found the following photometric catalogs...\n")  # MDR 2022/05/17
         print(secats)  # MDR 2022/05/17
         # print('\nThe catalog was read in as...\n') # MDR 2022/05/17
@@ -2575,8 +2495,7 @@ def measure_z_interactive(
             objid_unique[0],
             g102zeroarr,
             user,
-            "linear",
-            path_to_data=path_to_data,
+            "linear", args,
         )
     else:
         g102zeroarr = None
@@ -2589,8 +2508,7 @@ def measure_z_interactive(
             objid_unique[0],
             g141zeroarr,
             user,
-            "linear",
-            path_to_data=path_to_data,
+            "linear", args,
         )
     else:
         g141zeroarr = None
@@ -2603,23 +2521,14 @@ def measure_z_interactive(
             objid_unique[0],
             f200zeroarr,
             user,
-            "linear",
-            path_to_data=path_to_data,
+            "linear", args,
         )
     else:
         f200zeroarr = None
         f200firstarr = None
 
-    # showDirectNEW(
-    #     objid_unique[0],
-    #     parnos[0],
-    #     g102zeroarr,
-    #     load_image=True,
-    #     path_to_data=path_to_data,
-    # )
-
     # tbaines: show direct images of PASSAGE data
-    showDirect_PASSAGE(parno=parnos[0], path_to_data=path_to_data)
+    showDirect_PASSAGE(parno=parnos[0], path_to_drizzled_images=args.data_dir + args.drizzled_images_path, path_to_region_files=args.data_dir + args.region_file_path)
 
     #     if show_dispersed:  # MB
     #         showDispersed(objid_unique[0], parnos[0], load_image=True, path_to_data  = path_to_data)
@@ -2642,9 +2551,7 @@ def measure_z_interactive(
     )
 
     while remaining_objects.shape[0] > 0:
-        if path_to_stored_fits == " ":
-            use_stored_fits = False
-        elif os.path.exists(path_to_stored_fits):
+        if os.path.exists(args.stored_fits_path):
             use_stored_fits = True
             print("looking for stored fit data")
         else:
@@ -2713,14 +2620,14 @@ def measure_z_interactive(
         objinfo = objtable[wcatalog]
         # inspect_object(user, parnos[0], next_obj, objinfo, lamlines_found,
         #               ston_found, g102zeroarr, g141zeroarr, linelistoutfile,
-        #               commentsfile, remaining_objects, allobjects,
+        #               commentsfile, remaining_objects, allobjects, args,
         #               show_dispersed=show_dispersed)
 
         if use_stored_fits == True:
             ### get pickle files:
             inpickles = []
             path_pickle1 = (
-                path_to_stored_fits
+                args.stored_fits_path
                 + "/Par"
                 + str(parnos[0])
                 + "_output_a/fitdata/Par0_"
@@ -2782,10 +2689,10 @@ def measure_z_interactive(
                 linelistoutfile,
                 commentsfile,
                 remaining_objects,
-                allobjects,
+                allobjects, args, 
                 show_dispersed=show_dispersed,
                 stored_fits=inpickles,
-                path_to_data=path_to_data, path_to_code=path_to_code)
+                )
         else:
             inspect_object(
                 user,
@@ -2799,10 +2706,10 @@ def measure_z_interactive(
                 linelistoutfile,
                 commentsfile,
                 remaining_objects,
-                allobjects,
+                allobjects, args,
                 show_dispersed=show_dispersed,
                 stored_fits=False,
-                path_to_data=path_to_data, path_to_code=path_to_code)
+                )
             # if len(glob.glob(path_to_wisp_data +'Par'+ str(parnos[0])+ '/Spectra/Par' +str(parnos[0])+ '_' + str(next_obj).zfill(5)+'*_R.dat')) > 0:
             #     inspect_object(
             #         user,
@@ -2816,7 +2723,7 @@ def measure_z_interactive(
             #         linelistoutfile,
             #         commentsfile,
             #         remaining_objects,
-            #         allobjects,
+            #         allobjects, args,
             #         show_dispersed=show_dispersed,
             #         stored_fits=False,
             #         path_to_wisp_data=path_to_wisp_data, orientation='R')
@@ -2833,7 +2740,7 @@ def measure_z_interactive(
             #         linelistoutfile,
             #         commentsfile,
             #         remaining_objects,
-            #         allobjects,
+            #         allobjects, args,
             #         show_dispersed=show_dispersed,
             #         stored_fits=False,
             #         path_to_wisp_data=path_to_wisp_data, orientation='C')
@@ -2872,7 +2779,7 @@ def measure_z_interactive(
                         ### get pickle files:
                         inpickles = []
                         path_pickle1 = (
-                            path_to_stored_fits
+                            args.stored_fits_path
                             + "/Par"
                             + str(parnos[0])
                             + "_output_a/fitdata/Par0_"
@@ -2934,10 +2841,10 @@ def measure_z_interactive(
                             linelistoutfile,
                             commentsfile,
                             remaining_objects,
-                            allobjects,
+                            allobjects, args,
                             show_dispersed=show_dispersed,
                             stored_fits=inpickles,
-                            path_to_data=path_to_data,path_to_code=path_to_code)
+                            )
                     else:
                         inspect_object(
                             user,
@@ -2951,11 +2858,11 @@ def measure_z_interactive(
                             linelistoutfile,
                             commentsfile,
                             remaining_objects,
-                            allobjects,
+                            allobjects, args,
                             show_dispersed=show_dispersed,
                             stored_fits=False,
-                            path_to_data=path_to_data, path_to_code=path_to_code)
-                        if len(glob.glob(path_to_data +'Par'+ str(parnos[0])+ '/Spectra/Par' +str(parnos[0])+ '_' + str(next_obj).zfill(5)+'*_R.dat')) > 0:
+                            )
+                        if len(glob.glob(args.data_dir + args.spec1D_path + f'Par{parnos[0]}_{next_obj:05d}*_R.dat')) > 0:
                             inspect_object(
                                 user,
                                 parnos[0],
@@ -2968,11 +2875,11 @@ def measure_z_interactive(
                                 linelistoutfile,
                                 commentsfile,
                                 remaining_objects,
-                                allobjects,
+                                allobjects, args,
                                 show_dispersed=show_dispersed,
                                 stored_fits=False,
-                                path_to_data=path_to_data, orientation='R')
-                        if len(glob.glob(path_to_data +'Par'+ str(parnos[0])+ '/Spectra/Par' +str(parnos[0])+ '_' + str(next_obj).zfill(5)+'*_C.dat'))> 0:
+                                orientation='R')
+                        if len(glob.glob(args.data_dir + args.spec1D_path + f'Par{parnos[0]}_{next_obj:05d}*_C.dat'))> 0:
                             inspect_object(
                                 user,
                                 parnos[0],
@@ -2985,10 +2892,10 @@ def measure_z_interactive(
                                 linelistoutfile,
                                 commentsfile,
                                 remaining_objects,
-                                allobjects,
+                                allobjects, args,
                                 show_dispersed=show_dispersed,
                                 stored_fits=False,
-                                path_to_data=path_to_data, orientation='C')
+                                orientation='C')
 
                 else:
                     break
