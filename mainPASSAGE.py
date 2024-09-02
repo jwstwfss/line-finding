@@ -3,6 +3,7 @@ from passage_analysis import utilities
 import os
 import re
 import glob
+import argparse
 
 # Open two ds9 windows:
 os.system('/Applications/SAOImageDS9.app/Contents/MacOS/ds9 -title PASSAGE_DIRECT &')
