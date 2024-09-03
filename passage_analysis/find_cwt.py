@@ -4,6 +4,7 @@ from glob import glob
 from passage_analysis import *
 from astropy.table import Table
 from astropy.io import ascii as asc
+from astropy.io import fits
 
 def find_cwt(lam, flux, err, fwhm_est_pix, beam_name, config_pars, plotflag = True):
     '''
@@ -62,7 +63,7 @@ def find_cwt(lam, flux, err, fwhm_est_pix, beam_name, config_pars, plotflag = Tr
     peaks = peaks[w[0]]
 
     # KVN testing:
-    print('peaks: ', peaks)
+    #print('peaks: ', peaks)
     #print('division: ', (flux[peaks] - cont_filter[peaks])/cont_filter[peaks])
     
     # reject lines with presumably low EWs
@@ -176,22 +177,38 @@ def loop_field_cwt(parno, args):
     with open(tempfilename, 'w') as outfile:
         # AA added looping over all three PASSAGE filters, as opposed separate code block for each filter
         filters = ['115', '150', '200']
+
         for index, thisfilter in enumerate(filters):
             print(f'Doing filter G{thisfilter} which is {index + 1} out of {len(filters)} filters..')
-            thisfilter_files = glob(args.spec1D_path + f'*{thisfilter}_1D.dat')
+
+            # AA added the alternate handling below, to handle cases where spectra are available as .fits files rather than .dat
+            if args.spectra_available_for_individual_filters:
+                thisfilter_files = glob(args.spec1D_path + f'*{thisfilter}_1D.dat') # spectra files available in .dat format, separately for each filter
+            else:
+                thisfilter_files = glob(args.spec1D_path + f'Par{parno}_*.1D.fits') # spectra files available in .fits format, all filters in one file for a given object
             thisfilter_files.sort()
 
             # looping over all spectra files of the current filter
-            for filename in thisfilter_files:
-                print('starting obj id = ', filename)
+            for index2, filename in enumerate(thisfilter_files):
+                print(f'Starting obj id = {os.path.split(filename)[1]} which is {index2 + 1} of {len(thisfilter_files)}..')
+
                 # get spectral data
-                spdata = asc.read(filename, names = ['lambda', 'flux', 'ferror', 'contam', 'zero'])
+                # AA added the alternate handling below, to handle cases where spectra are available as .fits files rather than .dat
+                if args.spectra_available_for_individual_filters:
+                    spdata = asc.read(filename, names = ['lambda', 'flux', 'ferror', 'contam', 'zero'])
+                else:
+                    data = fits.open(filename)
+                    if not f'F{thisfilter}W' in data: continue # skip to the next object, if this filter does not exist in this object # AA added
+                    spdata = Table(data[f'F{thisfilter}W'].data)
+                    spdata.rename_columns(['wave', 'err', 'flat'], ['lambda', 'ferror', 'zero'])
+                    spdata = spdata['lambda', 'flux', 'ferror', 'contam', 'zero']
+
                 trimmed_spec = trim_spec(spdata, None, None, config_pars)
 
                 # look up the object in the se catalog and grab the a_image
+                filename = os.path.split(filename)[1] # AA dded, because otherwise it will grab the full path with all the directories, etc.
                 beam = float(filename.split('_')[1].split('.')[0])
                 parno = parno #os.getcwd().split('/')[-2].split('Par')[-1] # fixed parallel field number to zero for the mudf program
-                print('Par Number: ', parno)
 
                 w = np.where(beam_se == beam)
                 w = w[0] # because of tuples

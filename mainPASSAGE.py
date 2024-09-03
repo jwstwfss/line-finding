@@ -43,7 +43,6 @@ def get_paths_by_user(args):
         args.args.code_dir = '/Users/knedkova/Work/2024PASSAGE/passage_analysis/'
         args.args.data_dir = '/Users/knedkova/Work/2024PASSAGE/output/'
         args.output_dir = '/Users/knedkova/Work/2024PASSAGE/data/'
-        args.is_fieldname_padded = False # set to True if files/folders are named like Par005 instead of Par5 and so on
 
         # in the following paths, "FIELD" is a placeholder, later to be replaced by the relevant field name
         args.speccat_file_path = args.data_dir + 'ParFIELD/DATA/DIRECT_GRISM/'
@@ -54,6 +53,9 @@ def get_paths_by_user(args):
         args.spec2D_path = args.data_dir + 'ParFIELD/spec2D/'
         args.linelist_path = args.output_dir + 'linelist/'
         args.stored_fits_path = args.output_dir + 'ParFIELD/'
+
+        args.is_fieldname_padded = False # set to True if files/folders are named like Par005 instead of Par5 and so on
+        args.spectra_available_for_individual_filters = True # set to True if spectra files are named as *G115_1D.dat
 
     elif 'ayan' in args.user:
         if args.user == 'ayan_local':
@@ -66,7 +68,6 @@ def get_paths_by_user(args):
         args.code_dir = '/Users/acharyya/Work/astro/passage/line-finding/passage_analysis/'
         args.data_dir = args.root_dir + 'passage_data/'
         args.output_dir = args.root_dir + 'passage_output/'
-        args.is_fieldname_padded = True
 
         args.speccat_file_path = args.data_dir + 'ParFIELD/Products/'
         args.photcat_file_path = args.data_dir + 'ParFIELD/Products/'
@@ -76,6 +77,9 @@ def get_paths_by_user(args):
         args.spec2D_path = args.data_dir + 'ParFIELD/Products/spec2D/'
         args.linelist_path = args.output_dir + 'linelist/'
         args.stored_fits_path = args.output_dir + 'ParFIELD/'
+
+        args.is_fieldname_padded = True
+        args.spectra_available_for_individual_filters = False
 
     return args
 
@@ -126,25 +130,25 @@ if __name__ == "__main__":
         from passage_analysis import utilities
         print('passage_analysis now successfully imported.')
 
-    # -----------------------------Open two ds9 windows--------------------------------------
-    os.system('/Applications/SAOImageDS9.app/Contents/MacOS/ds9 -title PASSAGE_DIRECT &')
-    os.system('/Applications/SAOImageDS9.app/Contents/MacOS/ds9 -title PASSAGE_spec2D &')
-
     # --------move to the directory where you want your outputs-----------
     #os.chdir(args.output_dir)
 
     # ---------check if region files exist. If not, run code to create necessary region files---------
-    regionfiles = glob.glob(args.data_dir + args.region_file_path + '*.reg')
+    regionfiles = glob.glob(args.region_file_path + '*.reg')
     if len(regionfiles) == 0:
         print('\033[94m' + "No region files found, creating those for you now."  + '\033[0m')
         utilities.create_regions(parno, args)
 
     # -------check if line list exists. If not, run code to create the linelist------------
-    linelist_file = args.output_dir + args.linelist_path + 'Par'+str(parno)+'lines.dat'
+    linelist_file = args.linelist_path + 'Par'+str(parno)+'lines.dat'
     if not os.path.exists(linelist_file):
         print('\033[94m' + "No line list file found, creating the line list for you now." + '\033[0m')
         passage.loop_field_cwt(parno, args)
     
+    # -----------------------------Open two ds9 windows--------------------------------------
+    os.system('/Applications/SAOImageDS9.app/Contents/MacOS/ds9 -title PASSAGE_DIRECT &')
+    os.system('/Applications/SAOImageDS9.app/Contents/MacOS/ds9 -title PASSAGE_spec2D &')
+
     # -----------run the measure_z_interactive codes-------------------
     args.show_dispersed = True
     args.print_colors = True
