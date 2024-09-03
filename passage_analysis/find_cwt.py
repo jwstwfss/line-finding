@@ -172,7 +172,7 @@ def loop_field_cwt(parno, args):
     tempfilename = args.linelist_path + 'temp'
     config_pars['transition_wave'] = 13000. # MDR 2022/08/16
 
-    print(f'\nLooking for grism spectra files in {args.spec1D_path}...')
+    print(f'\nLooking for grism spectra files in {args.spectra_path}...')
 
     with open(tempfilename, 'w') as outfile:
         # AA added looping over all three PASSAGE filters, as opposed separate code block for each filter
@@ -183,9 +183,9 @@ def loop_field_cwt(parno, args):
 
             # AA added the alternate handling below, to handle cases where spectra are available as .fits files rather than .dat
             if args.spectra_available_for_individual_filters:
-                thisfilter_files = glob(args.spec1D_path + f'*{thisfilter}_1D.dat') # spectra files available in .dat format, separately for each filter
+                thisfilter_files = glob(args.spectra_path + f'*{thisfilter}_1D.dat') # spectra files available in .dat format, separately for each filter
             else:
-                thisfilter_files = glob(args.spec1D_path + f'Par{parno}_*.1D.fits') # spectra files available in .fits format, all filters in one file for a given object
+                thisfilter_files = glob(args.spectra_path + f'Par{parno}_*.1D.fits') # spectra files available in .fits format, all filters in one file for a given object
             thisfilter_files.sort()
 
             # looping over all spectra files of the current filter

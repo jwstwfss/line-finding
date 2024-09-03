@@ -1015,7 +1015,7 @@ def inspect_object(
     # set up and filenames
     outdir = args.stored_fits_path + f'/Par{par}_output_{user}'
 
-    base_path = args.spec1D_path + f'Par{par}_{obj:05d}'
+    base_path = args.spectra_path + f'Par{par}_{obj:05d}'
     specnameg1 = (base_path + ".G115_1D.dat")
     specnameg2 = (base_path + ".G150_1D.dat")
     specnameg3 = (base_path + ".G200_1D.dat")
@@ -2311,7 +2311,7 @@ def measure_z_interactive(parno, args, linelistfile=None):
         print(os.getcwd())
         print("")
 
-    tmp = glob(args.spec1D_path + '*.dat')  # MDR 2022/05/17 and updated KVN 2024/07/31, updated AA 2024/09/03
+    tmp = glob(args.spectra_path + '*.dat')  # MDR 2022/05/17 and updated KVN 2024/07/31, updated AA 2024/09/03
     print_prompt("You are about to inspect emission lines identified in parallel field {}".format(parno), prompt_type="interim")
     print_prompt("Please enter your name or desired username", prompt_type="interim")
     while True:
@@ -2383,14 +2383,14 @@ def measure_z_interactive(parno, args, linelistfile=None):
     if args.verbose == True:
         print("Creating trace.reg files...\n")  # MDR 2022/05/17
 
-    trace102 = open(args.spec1D_path + '/G102_trace.reg', 'w')
+    trace102 = open(args.spectra_path + '/G102_trace.reg', 'w')
     trace102.write('global color=green dashlist=8 3 width=1 font="helvetica 10 normal roman" select=1 highlite=1 dash=0 fixed=0 edit=1 move=1 delete=1 include=1 source=1\n')
     trace102.write("wcs;\n")
     # sensitivity drops below 25% of max at wave < 8250 and wave > 11540
     # so box should be 3290 angstroms wide and be centered at 9895.
     trace102.write("box(9895,0,3290,1,1.62844e-12)\n")
     trace102.close()
-    trace141 = open(args.spec1D_path + 'G141_trace.reg', 'w')
+    trace141 = open(args.spectra_path + 'G141_trace.reg', 'w')
     trace141.write('global color=green dashlist=8 3 width=1 font="helvetica 10 normal roman" select=1 highlite=1 dash=0 fixed=0 edit=1 move=1 delete=1 include=1 source=1\n')
     trace141.write("wcs;\n")
     # sensitivity drops below 25% of max at wave < 10917 and wave > 16904
@@ -2854,7 +2854,7 @@ def measure_z_interactive(parno, args, linelistfile=None):
                             show_dispersed=show_dispersed,
                             stored_fits=False,
                             )
-                        if len(glob.glob(args.spec1D_path + f'Par{parnos[0]}_{next_obj:05d}*_R.dat')) > 0:
+                        if len(glob.glob(args.spectra_path + f'Par{parnos[0]}_{next_obj:05d}*_R.dat')) > 0:
                             inspect_object(
                                 user,
                                 parnos[0],
@@ -2871,7 +2871,7 @@ def measure_z_interactive(parno, args, linelistfile=None):
                                 show_dispersed=show_dispersed,
                                 stored_fits=False,
                                 orientation='R')
-                        if len(glob.glob(args.spec1D_path + f'Par{parnos[0]}_{next_obj:05d}*_C.dat'))> 0:
+                        if len(glob.glob(args.spectra_path + f'Par{parnos[0]}_{next_obj:05d}*_C.dat'))> 0:
                             inspect_object(
                                 user,
                                 parnos[0],
