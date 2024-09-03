@@ -2,9 +2,10 @@
     Filename: mainPASSAGE.py
     Notes: Interactive emission line finding routine for PASSAGE fields
     Author : Kalina Nedkova
-    Modified by: Ayan Acharyya
-    Last modified: 2 September 2024
-    Example: run mainPASSAGE.py --user ayan_hd
+    Modified: Ayan Acharyya
+    Last modified: 3 September 2024
+    Examples: run mainPASSAGE.py --user ayan_hd
+             run mainPASSAGE.py --verbose
 '''
 
 try:
@@ -27,6 +28,7 @@ def parse_args():
 
     parser = argparse.ArgumentParser(description='Produces emission line maps for JWST-PASSAGE data.')
     parser.add_argument('--user', metavar='user', type=str, action='store', default='knedkova', help='Which user template to follow for directory structures?')
+    parser.add_argument('--verbose', dest='verbose', action='store_true', default=False, help='Maximise prints to screen? Default is no.')
     args = parser.parse_args()
 
     return args
@@ -152,7 +154,6 @@ if __name__ == "__main__":
     # -----------run the measure_z_interactive codes-------------------
     args.show_dispersed = True
     args.print_colors = True
-    args.verbose = True
     passage.measure_z_interactive(parno, args)
 
 

@@ -231,7 +231,7 @@ def loop_field_cwt(parno, args):
                 snr_cwt = thisfilter_cwt[3]
 
                 for i in np.arange(len(lam_cwt)):
-                    print(beam, f'G{thisfilter}', lam_cwt[i], npix_cwt[i], fwhm_est_pix, snr_cwt[i])
+                    if args.verbose: print(beam, f'G{thisfilter}', lam_cwt[i], npix_cwt[i], fwhm_est_pix, snr_cwt[i]) # AA made this optional, to reduce screen output
                     outfile.write(f'{parno}  {thisfilter}  {int(beam)}  {lam_cwt[i]}  {npix_cwt[i]}  {snr_cwt[i]}\n')
 
                 if config_pars['n_sigma_for_2pix_lines'] != False:
@@ -243,7 +243,7 @@ def loop_field_cwt(parno, args):
                     npix_cwt = thisfilter_cwt[2]
                     snr_cwt = thisfilter_cwt[3]
                     for i in np.arange(len(lam_cwt)):
-                        print(beam, f'G{thisfilter}', lam_cwt[i], npix_cwt[i], fwhm_est_pix, snr_cwt[i])
+                        if args.verbose: print(beam, f'G{thisfilter}', lam_cwt[i], npix_cwt[i], fwhm_est_pix, snr_cwt[i]) # AA made this optional, to reduce screen output
                         outfile.write(f'{parno}  {thisfilter}  {int(beam)}  {lam_cwt[i]}  {npix_cwt[i]}  {snr_cwt[i]}\n')
 
                 # go back to the beginning with the old config pars
