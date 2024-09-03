@@ -998,7 +998,6 @@ def inspect_object(
     commentsfile,
     remaining,
     allobjects, args,
-    args,
     show_dispersed=True,
     stored_fits=False,
     orientation='combined',
@@ -1014,9 +1013,9 @@ def inspect_object(
     An attempt to move all object-specific tasks
     """
     # set up and filenames
-    outdir = args.output_dir + f'Par{par}/Par{par}_output_{user}'
+    outdir = args.stored_fits_path + f'/Par{par}_output_{user}'
 
-    base_path = args.data_dir + args.spec1D_path + f'Par{par}_{obj:05d}'
+    base_path = args.spec1D_path + f'Par{par}_{obj:05d}'
     specnameg1 = (base_path + ".G115_1D.dat")
     specnameg2 = (base_path + ".G150_1D.dat")
     specnameg3 = (base_path + ".G200_1D.dat")
@@ -1086,7 +1085,7 @@ def inspect_object(
 
     # =================== Show spec2d new (begin) =====================
 
-    showSpec2D_PASSAGE(par, obj, path_to_spec2D=args.data_dir + args.spec2D_path)
+    showSpec2D_PASSAGE(par, obj, path_to_spec2D=args.spec2D_path)
 
     # =================== Show spec2d new (end) =====================
     # define parameters for this object
@@ -1104,7 +1103,7 @@ def inspect_object(
     #panDirect_PASSAGE(x_pix, y_pix)
     ### Updated by KVN because this panning needs to be offset for each grism
     ### See new panDispersed_PASSAGE function in guis.py
-    panDispersed_PASSAGE(obj, parno=par, path_to_drizzled_images=args.data_dir + args.drizzled_images_path, path_to_region_files=args.data_dir + args.region_file_path)
+    panDispersed_PASSAGE(obj, parno=par, path_to_drizzled_images=args.drizzled_images_path, path_to_region_files=args.region_file_path)
 
     # start with a fresh set of config pars
     config_pars = read_config(path_to_code+"/default.config", availgrism=availgrism)
@@ -2058,9 +2057,9 @@ def inspect_object(
 
         # recenter full images
         elif option.strip().lower() == "dc":
-            showDirectNEW(obj, par, g141zeros, path_to_drizzled_images=args.data_dir + args.drizzled_images_path)
+            showDirectNEW(obj, par, g141zeros, path_to_drizzled_images=args.drizzled_images_path)
             if show_dispersed:  # MB
-                showDispersed(obj, path_to_dispersed=args.data_dir + args.spec2D_path)
+                showDispersed(obj, path_to_dispersed=args.spec2D_path)
 
         # reload full iamges
         elif option.strip().lower() == "reload":
@@ -2069,14 +2068,14 @@ def inspect_object(
                 par,
                 g141zeros,
                 load_image=True,
-                path_to_drizzled_images=args.data_dir + args.drizzled_images_path,
+                path_to_drizzled_images=args.drizzled_images_path,
             )
             if show_dispersed:
-                showDispersed(obj, path_to_dispersed=args.data_dir + args.spec2D_path, load_image=True)
+                showDispersed(obj, path_to_dispersed=args.spec2D_path, load_image=True)
 
         # reload direct image region files
         elif option.strip().lower() == "dr":
-            reloadReg(region_file_path=args.data_dir + args.region_file_path)
+            reloadReg(region_file_path=args.region_file_path)
 
         # new options dealing with iterating objects
         # can't actually go back or choose another object now,
@@ -2281,7 +2280,7 @@ def measure_z_interactive(parno, args, linelistfile=None):
     #### STEP 1:   get linelist ###############################################
     ###########################################################################
     if linelistfile is None:
-        linelistfile = args.data_dir + args.linelist_path + f'Par{parno}lines.dat'
+        linelistfile = args.linelist_path + f'Par{parno}lines.dat'
 
     if not os.path.exists(linelistfile):
         print_prompt("Invalid path to line list file: %s" % (linelistfile), prompt_type="interim")
@@ -2312,7 +2311,7 @@ def measure_z_interactive(parno, args, linelistfile=None):
         print(os.getcwd())
         print("")
 
-    tmp = glob(args.data_dir + args.spec1D_path + '*.dat')  # MDR 2022/05/17 and updated KVN 2024/07/31, updated AA 2024/09/03
+    tmp = glob(args.spec1D_path + '*.dat')  # MDR 2022/05/17 and updated KVN 2024/07/31, updated AA 2024/09/03
     print_prompt("You are about to inspect emission lines identified in parallel field {}".format(parno), prompt_type="interim")
     print_prompt("Please enter your name or desired username", prompt_type="interim")
     while True:
@@ -2324,7 +2323,7 @@ def measure_z_interactive(parno, args, linelistfile=None):
             break
     user = user.strip().lower()
     # create output directory
-    outdir = args.output_dir + f'Par{parno}/' + f'Par{parno}_output_{user}' # modified by AA on 2024-09-03 to include full path
+    outdir = args.stored_fits_path + f'Par{parno}_output_{user}' # modified by AA on 2024-09-03 to include full path
     if not os.path.isdir(outdir):
         os.mkdir(outdir)
 
@@ -2384,14 +2383,14 @@ def measure_z_interactive(parno, args, linelistfile=None):
     if args.verbose == True:
         print("Creating trace.reg files...\n")  # MDR 2022/05/17
 
-    trace102 = open(args.data_dir + args.spec1D_path + '/G102_trace.reg', 'w')
+    trace102 = open(args.spec1D_path + '/G102_trace.reg', 'w')
     trace102.write('global color=green dashlist=8 3 width=1 font="helvetica 10 normal roman" select=1 highlite=1 dash=0 fixed=0 edit=1 move=1 delete=1 include=1 source=1\n')
     trace102.write("wcs;\n")
     # sensitivity drops below 25% of max at wave < 8250 and wave > 11540
     # so box should be 3290 angstroms wide and be centered at 9895.
     trace102.write("box(9895,0,3290,1,1.62844e-12)\n")
     trace102.close()
-    trace141 = open(args.data_dir + args.spec1D_path + 'G141_trace.reg', 'w')
+    trace141 = open(args.spec1D_path + 'G141_trace.reg', 'w')
     trace141.write('global color=green dashlist=8 3 width=1 font="helvetica 10 normal roman" select=1 highlite=1 dash=0 fixed=0 edit=1 move=1 delete=1 include=1 source=1\n')
     trace141.write("wcs;\n")
     # sensitivity drops below 25% of max at wave < 10917 and wave > 16904
@@ -2415,7 +2414,7 @@ def measure_z_interactive(parno, args, linelistfile=None):
     #   the output linelist.
     # find all available cats
 
-    secats = glob(args.data_dir + args.photcat_file_path + 'Par*phot*.fits') # AA modified, allowing flexible directory structure
+    secats = glob(args.photcat_file_path + 'Par*phot*.fits') # AA modified, allowing flexible directory structure
     secats.sort()
     cat = Table.read(secats[0])
 
@@ -2528,7 +2527,7 @@ def measure_z_interactive(parno, args, linelistfile=None):
         f200firstarr = None
 
     # tbaines: show direct images of PASSAGE data
-    showDirect_PASSAGE(parno=parnos[0], path_to_drizzled_images=args.data_dir + args.drizzled_images_path, path_to_region_files=args.data_dir + args.region_file_path)
+    showDirect_PASSAGE(parno=parnos[0], path_to_drizzled_images=args.drizzled_images_path, path_to_region_files=args.region_file_path)
 
     #     if show_dispersed:  # MB
     #         showDispersed(objid_unique[0], parnos[0], load_image=True, path_to_data  = path_to_data)
@@ -2778,14 +2777,7 @@ def measure_z_interactive(parno, args, linelistfile=None):
                     if use_stored_fits == True:
                         ### get pickle files:
                         inpickles = []
-                        path_pickle1 = (
-                            args.stored_fits_path
-                            + "/Par"
-                            + str(parnos[0])
-                            + "_output_a/fitdata/Par0_"
-                            + str(next_obj)
-                            + "_fitspec.pickle"
-                        )
+                        path_pickle1 = (args.stored_fits_path + f'/Par{parnos[0]}_output_a/fitdata/Par0_{next_obj}_fitspec.pickle')
                         # path_pickle1 = path_to_stored_fits + '/Par'  + str(parnos[0]) + '_output_mbagley/fitdata/Par' + str(parnos[0]) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
                         # path_pickle2 = path_to_stored_fits + '/Par'  + str(parnos[0]) +    '_output_marc/fitdata/Par' + str(parnos[0]) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
                         # path_pickle3 = path_to_stored_fits + '/Par'  + str(parnos[0]) + '_output_claudia/fitdata/Par' + str(parnos[0]) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
@@ -2862,7 +2854,7 @@ def measure_z_interactive(parno, args, linelistfile=None):
                             show_dispersed=show_dispersed,
                             stored_fits=False,
                             )
-                        if len(glob.glob(args.data_dir + args.spec1D_path + f'Par{parnos[0]}_{next_obj:05d}*_R.dat')) > 0:
+                        if len(glob.glob(args.spec1D_path + f'Par{parnos[0]}_{next_obj:05d}*_R.dat')) > 0:
                             inspect_object(
                                 user,
                                 parnos[0],
@@ -2879,7 +2871,7 @@ def measure_z_interactive(parno, args, linelistfile=None):
                                 show_dispersed=show_dispersed,
                                 stored_fits=False,
                                 orientation='R')
-                        if len(glob.glob(args.data_dir + args.spec1D_path + f'Par{parnos[0]}_{next_obj:05d}*_C.dat'))> 0:
+                        if len(glob.glob(args.spec1D_path + f'Par{parnos[0]}_{next_obj:05d}*_C.dat'))> 0:
                             inspect_object(
                                 user,
                                 parnos[0],

@@ -45,17 +45,15 @@ def get_paths_by_user(args):
         args.output_dir = '/Users/knedkova/Work/2024PASSAGE/data/'
         args.is_fieldname_padded = False # set to True if files/folders are named like Par005 instead of Par5 and so on
 
-        # in the following paths:
-        # 1. "FIELD" is a placeholder, later to be replaced by the relevant field name
-        # 2. These paths will be APPENDED to the above paths
-        args.speccat_file_path = 'ParFIELD/DATA/DIRECT_GRISM/'
-        args.photcat_file_path = 'ParFIELD/DATA/DIRECT_GRISM/'
-        args.region_file_path = 'ParFIELD/DATA/'
-        args.drizzled_images_path = 'ParFIELD/DATA/'
-        args.linelist_path = 'linelist/'
-        args.spec1D_path = 'ParFIELD/Spectra/'
-        args.spec2D_path = 'ParFIELD/spec2D/'
-        args.stored_fits_path = 'ParFIELD/'
+        # in the following paths, "FIELD" is a placeholder, later to be replaced by the relevant field name
+        args.speccat_file_path = args.data_dir + 'ParFIELD/DATA/DIRECT_GRISM/'
+        args.photcat_file_path = args.data_dir + 'ParFIELD/DATA/DIRECT_GRISM/'
+        args.region_file_path = args.data_dir + 'ParFIELD/DATA/'
+        args.drizzled_images_path = args.data_dir + 'ParFIELD/DATA/'
+        args.spec1D_path = args.data_dir + 'ParFIELD/Spectra/'
+        args.spec2D_path = args.data_dir + 'ParFIELD/spec2D/'
+        args.linelist_path = args.output_dir + 'linelist/'
+        args.stored_fits_path = args.output_dir + 'ParFIELD/'
 
     elif 'ayan' in args.user:
         if args.user == 'ayan_local':
@@ -68,16 +66,16 @@ def get_paths_by_user(args):
         args.code_dir = '/Users/acharyya/Work/astro/passage/line-finding/passage_analysis/'
         args.data_dir = args.root_dir + 'passage_data/'
         args.output_dir = args.root_dir + 'passage_output/'
-        args.is_fieldname_padded = False
+        args.is_fieldname_padded = True
 
-        args.speccat_file_path = 'ParFIELD/Extractions/'
-        args.photcat_file_path = 'ParFIELD/Extractions/'
-        args.region_file_path = 'ParFIELD/Products/'
-        args.drizzled_images_path = 'ParFIELD/Products/'
-        args.linelist_path = 'linelist/'
-        args.spec1D_path = 'ParFIELD/Products/spec1D/'
-        args.spec2D_path = 'ParFIELD/Products/spec2D/'
-        args.stored_fits_path = 'ParFIELD/'
+        args.speccat_file_path = args.data_dir + 'ParFIELD/Products/'
+        args.photcat_file_path = args.data_dir + 'ParFIELD/Products/'
+        args.region_file_path = args.data_dir + 'ParFIELD/Regions/'
+        args.drizzled_images_path = args.data_dir + 'ParFIELD/Products/'
+        args.spec1D_path = args.data_dir + 'ParFIELD/Products/spec1D/'
+        args.spec2D_path = args.data_dir + 'ParFIELD/Products/spec2D/'
+        args.linelist_path = args.output_dir + 'linelist/'
+        args.stored_fits_path = args.output_dir + 'ParFIELD/'
 
     return args
 
@@ -89,7 +87,7 @@ def substitute_fieldname_in_paths(args, field, placeholder='FIELD'):
     By Ayan Acharyya
     '''
     all_attributes = list(args.__dict__.keys())
-    pseudo_paths = [item for item in all_attributes if 'FIELD' in item]
+    pseudo_paths = [item for item in all_attributes if placeholder in str(args.__dict__[item])]
 
     for this_path in pseudo_paths:
         args.__dict__[this_path] = args.__dict__[this_path].replace(placeholder, field)
@@ -119,7 +117,7 @@ if __name__ == "__main__":
     if args.is_fieldname_padded: parno = f'{parno:03}'
 
     # -----convert pseudo paths to proper paths------
-    args = substitute_fieldname_in_paths(args, parno)
+    args = substitute_fieldname_in_paths(args, str(parno))
 
     # -----import passage_analysis if not successful earlier------
     if 'passage' not in locals():
@@ -133,7 +131,7 @@ if __name__ == "__main__":
     os.system('/Applications/SAOImageDS9.app/Contents/MacOS/ds9 -title PASSAGE_spec2D &')
 
     # --------move to the directory where you want your outputs-----------
-    os.chdir(args.output_dir)
+    #os.chdir(args.output_dir)
 
     # ---------check if region files exist. If not, run code to create necessary region files---------
     regionfiles = glob.glob(args.data_dir + args.region_file_path + '*.reg')
@@ -143,7 +141,7 @@ if __name__ == "__main__":
 
     # -------check if line list exists. If not, run code to create the linelist------------
     linelist_file = args.output_dir + args.linelist_path + 'Par'+str(parno)+'lines.dat'
-    if os.path.exists(linelist_file):
+    if not os.path.exists(linelist_file):
         print('\033[94m' + "No line list file found, creating the line list for you now." + '\033[0m')
         passage.loop_field_cwt(parno, args)
     

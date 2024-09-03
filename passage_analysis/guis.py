@@ -393,12 +393,7 @@ def show2dNEW(grism, parno, obid, zeroarr, user, trans, args, zran1=None, zran2=
     zrad = 10.0
     workingdir = os.getcwd()
 
-    path2dl = (args.data_dir + args.spec2D_file_path + f'Par{parno}_{obid:05d}.2D.fits')
-
-    if os.path.exists(path2dl):
-        path2d = path2dl
-    else:
-        path2d = (args.data_dir + f'Par{parno}/spec2D/Par{parno}_{obid:05d}.2D.fits')
+    path2d = args.spec2D_file_path + f'Par{parno}_{obid:05d}.2D.fits'
 
     pix_per_um = 1 / (1e-4 * 46.934)  # GR150R 47.015 for GR150C
 
@@ -407,25 +402,25 @@ def show2dNEW(grism, parno, obid, zeroarr, user, trans, args, zran1=None, zran2=
     if grism == "F200W":
         frameno = "3"
         maglimit = 26.0
-        input_grism = (args.data_dir + args.drizzled_images_path + f'Par{parno}_f200w-gr150r_drz_sci.fits')
+        input_grism = (args.drizzled_images_path + f'Par{parno}_f200w-gr150r_drz_sci.fits')
         zp_offset = -210
         obj_offset = (147 + 0.238 * pix_per_um + tweak)  # First number is pixels to blue edge (poorly defined). Second num is wave distance to center in um.
     elif grism == "F150W":
         frameno = "2"
         maglimit = 24.5
-        input_grism = (args.data_dir + args.drizzled_images_path + f'Par{parno}_f150w-gr150r_drz_sci.fits')
+        input_grism = (args.drizzled_images_path + f'Par{parno}_f150w-gr150r_drz_sci.fits')
         zp_offset = -219 + tweak_zp
         obj_offset = 55 + 0.171 * pix_per_um + tweak
     elif grism == "F115W":
         frameno = "1"
         maglimit = 23.5
-        input_grism = (args.data_dir + args.drizzled_images_path + f'Par{parno}_f115w-gr150r_drz_sci.fits')
+        input_grism = (args.drizzled_images_path + f'Par{parno}_f115w-gr150r_drz_sci.fits')
         zp_offset = -225.5 + tweak_zp
         obj_offset = -6 + 0.135 * pix_per_um + tweak
 
-    direct1 = (args.data_dir + args.drizzled_images_path + f'Par{parno}_f115w_drz_sci.fits')
-    direct2 = (args.data_dir + args.drizzled_images_path + f'Par{parno}_f150w_drz_sci.fits')
-    direct3 = (args.data_dir + args.drizzled_images_path + f'Par{parno}_f200w_drz_sci.fits')
+    direct1 = (args.drizzled_images_path + f'Par{parno}_f115w_drz_sci.fits')
+    direct2 = (args.drizzled_images_path + f'Par{parno}_f150w_drz_sci.fits')
+    direct3 = (args.drizzled_images_path + f'Par{parno}_f200w_drz_sci.fits')
 
     if os.path.exists(direct1) == 1:
         input_direct = direct1
@@ -526,7 +521,7 @@ def show2dNEW(grism, parno, obid, zeroarr, user, trans, args, zran1=None, zran2=
     #    cy = (cy - hdr['CRPIX2'])*hdr['CDELT2'] + hdr['CRVAL2']
     #    rad = 5 * hdr['CD1_1']
 
-    outcoo = (args.data_dir + args.spec1D_file_path + "temp_zero_coords_%s_" % user + str(frameno) + ".reg")
+    outcoo = (args.spec1D_file_path + "temp_zero_coords_%s_" % user + str(frameno) + ".reg")
 
     if os.path.exists(outcoo):
         os.unlink(outcoo)

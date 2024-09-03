@@ -147,20 +147,20 @@ def loop_field_cwt(parno, args):
     # no inputs and run from inside the data directory
     # KVN updating this to write the linelist to the 'output' directory... take path to data as input
     # AA updated this, for flexibility, to take args as input, which contains the directory structure
-    if not os.path.exists(args.output_dir + args.linelist_path):
-        os.mkdir(args.output_dir + args.linelist_path)
+    if not os.path.exists(args.linelist_path):
+        os.mkdir(args.linelist_path)
 
-    print('Looking for spectra here: ', str(args.data_dir) + ags.spec1D_path)
-    g115files = glob(str(args.data_dir) + ags.spec1D_path + '*G115_1D.dat') # looking for 3 spectra for PASSAGE
+    print('Looking for spectra here: ', args.spec1D_path)
+    g115files = glob(args.spec1D_path + '*G115_1D.dat') # looking for 3 spectra for PASSAGE
     g115files.sort()
-    g150files = glob(str(args.data_dir) + ags.spec1D_path + '*G150_1D.dat')
+    g150files = glob(args.spec1D_path + '*G150_1D.dat')
     g150files.sort()
 
     # M.D.R. - 10/08/2020
     print(f'\nSearching for default.config at: {args.code_dir}')
     config_pars = read_config(str(args.code_dir) + '/default.config')
 
-    photcat_file_path = str(args.data_dir) + args.photcat_file_path + f'Par{parno}_phot*.fits'
+    photcat_file_path = args.photcat_file_path + f'Par{parno}_phot*.fits'
     print(f'Searching for catalogs at: {photcat_file_path}')
     catalogs = glob(photcat_file_path) # get list of available catalogs
     catalogs.sort()
@@ -173,72 +173,73 @@ def loop_field_cwt(parno, args):
 
     a_images = cat['a_image']
     beam_se = cat['id']
-    
-    outfile = open(args.output_dir + args.linelist_path + 'temp', 'w')
+
+    tempfilename = args.linelist_path + 'temp'
     config_pars['transition_wave'] = 13000. # MDR 2022/08/16
 
     print('\nSearching for grism files...')
 
-    # looping over all three PASSAGE filters
-    filters = ['115', '150', '200']
-    for index, thisfilter in enumerate(filters):
-        print(f'Doing filter G{thisfilter} which is {index + 1} out of {len(filters)} filters..')
-        thisfilter_files = glob(str(args.data_dir) + ags.spec1D_path + f'*{thisfilter}_1D.dat')
-        thisfilter_files.sort()
+    with open(tempfilename, 'w') as outfile:
+        # AA added looping over all three PASSAGE filters, as opposed separate code block for each filter
+        filters = ['115', '150', '200']
+        for index, thisfilter in enumerate(filters):
+            print(f'Doing filter G{thisfilter} which is {index + 1} out of {len(filters)} filters..')
+            thisfilter_files = glob(args.spec1D_path + f'*{thisfilter}_1D.dat')
+            thisfilter_files.sort()
 
-        # looping over all spectra files of the current filter
-        for filename in thisfilter_files:
-            print('starting obj id = ', filename)
-            # get spectral data
-            spdata = asc.read(filename, names = ['lambda', 'flux', 'ferror', 'contam', 'zero'])
-            trimmed_spec = trim_spec(spdata, None, None, config_pars)
+            # looping over all spectra files of the current filter
+            for filename in thisfilter_files:
+                print('starting obj id = ', filename)
+                # get spectral data
+                spdata = asc.read(filename, names = ['lambda', 'flux', 'ferror', 'contam', 'zero'])
+                trimmed_spec = trim_spec(spdata, None, None, config_pars)
 
-            # look up the object in the se catalog and grab the a_image
-            beam = float(filename.split('_')[1].split('.')[0])
-            parno = parno #os.getcwd().split('/')[-2].split('Par')[-1] # fixed parallel field number to zero for the mudf program
-            print('Par Number: ', parno)
+                # look up the object in the se catalog and grab the a_image
+                beam = float(filename.split('_')[1].split('.')[0])
+                parno = parno #os.getcwd().split('/')[-2].split('Par')[-1] # fixed parallel field number to zero for the mudf program
+                print('Par Number: ', parno)
 
-            w = np.where(beam_se == beam)
-            w = w[0] # because of tuples
-            a_image = a_images[w][0]
-            fwhm_est_pix = a_image * 2.0
+                w = np.where(beam_se == beam)
+                w = w[0] # because of tuples
+                a_image = a_images[w][0]
+                fwhm_est_pix = a_image * 2.0
 
-            # unpack spectrum and check that it is long enough to proceed
-            lam = trimmed_spec[0]
-            flux_corr = trimmed_spec[1] - trimmed_spec[3]
-            err = trimmed_spec[2]
+                # unpack spectrum and check that it is long enough to proceed
+                lam = trimmed_spec[0]
+                flux_corr = trimmed_spec[1] - trimmed_spec[3]
+                err = trimmed_spec[2]
 
-            if len(lam) < config_pars['min_spec_length']:
-                continue
+                if len(lam) < config_pars['min_spec_length']:
+                    continue
 
-            # cwt it and unpack and write results
-            thisfilter_cwt = find_cwt(lam, flux_corr, err, fwhm_est_pix, str(int(beam)), config_pars, plotflag=False)
-            lam_cwt = thisfilter_cwt[0]
-            flam_cwt = thisfilter_cwt[1]
-            npix_cwt = thisfilter_cwt[2]
-            snr_cwt = thisfilter_cwt[3]
-
-            for i in np.arange(len(lam_cwt)):
-                print(beam, f'G{thisfilter}', lam_cwt[i], npix_cwt[i], fwhm_est_pix, snr_cwt[i])
-                outfile.write(f'{parno}  {thisfilter}  {int(beam)}  {lam_cwt[i]}  {npix_cwt[i]}  {snr_cwt[i]}\n')
-
-            if config_pars['n_sigma_for_2pix_lines'] != False:
-                config_pars['npix_thresh'] = 2
-                config_pars['n_sigma_above_cont'] = config_pars['n_sigma_for_2pix_lines']
+                # cwt it and unpack and write results
                 thisfilter_cwt = find_cwt(lam, flux_corr, err, fwhm_est_pix, str(int(beam)), config_pars, plotflag=False)
                 lam_cwt = thisfilter_cwt[0]
                 flam_cwt = thisfilter_cwt[1]
                 npix_cwt = thisfilter_cwt[2]
                 snr_cwt = thisfilter_cwt[3]
+
                 for i in np.arange(len(lam_cwt)):
                     print(beam, f'G{thisfilter}', lam_cwt[i], npix_cwt[i], fwhm_est_pix, snr_cwt[i])
                     outfile.write(f'{parno}  {thisfilter}  {int(beam)}  {lam_cwt[i]}  {npix_cwt[i]}  {snr_cwt[i]}\n')
 
-            # go back to the beginning with the old config pars
-            config_pars = read_config(str(args.code_dir)+'/default.config')
-            config_pars['transition_wave1'] = 13000. # MDR 2022/08/16
+                if config_pars['n_sigma_for_2pix_lines'] != False:
+                    config_pars['npix_thresh'] = 2
+                    config_pars['n_sigma_above_cont'] = config_pars['n_sigma_for_2pix_lines']
+                    thisfilter_cwt = find_cwt(lam, flux_corr, err, fwhm_est_pix, str(int(beam)), config_pars, plotflag=False)
+                    lam_cwt = thisfilter_cwt[0]
+                    flam_cwt = thisfilter_cwt[1]
+                    npix_cwt = thisfilter_cwt[2]
+                    snr_cwt = thisfilter_cwt[3]
+                    for i in np.arange(len(lam_cwt)):
+                        print(beam, f'G{thisfilter}', lam_cwt[i], npix_cwt[i], fwhm_est_pix, snr_cwt[i])
+                        outfile.write(f'{parno}  {thisfilter}  {int(beam)}  {lam_cwt[i]}  {npix_cwt[i]}  {snr_cwt[i]}\n')
 
-    tab = asciitable.read(args.output_dir + args.linelist_path + 'temp', format = 'no_header')
+                # go back to the beginning with the old config pars
+                config_pars = read_config(str(args.code_dir)+'/default.config')
+                config_pars['transition_wave1'] = 13000. # MDR 2022/08/16
+
+    tab = asciitable.read(tempfilename, format = 'no_header')
     par = tab['col1']
     grism = tab['col2']
     beam = tab['col3']
@@ -253,24 +254,23 @@ def loop_field_cwt(parno, args):
     snr = snr[s]
     par = par[0]
     beams_unique = np.unique(beam)
-    outfile = open(args.output_dir + args.linelist_path + f'Par{par}lines.dat', 'w')
+    outfilename = args.linelist_path + f'Par{par}lines.dat'
 
-    for b in beams_unique:
-        # AA adding a loop over filters, instead of separate blocks of code per filter
-        for thisfilter in filters:
-            w = (beam == b) & (grism == f'G{thisfilter}')
-            waves_obj = wave[w]
-            npix_obj = npix[w]
-            snr_obj = snr[w]
-            waves_uniq, ind = np.unique(waves_obj, return_index = True)
-            npix_uniq = npix_obj[ind]
-            snr_uniq = snr_obj[ind]
-            s = np.argsort(waves_uniq)
-            waves_final_thisfilter = waves_uniq[s]
-            npix_final_thisfilter = npix_uniq[s]
-            snr_final_thisfilter = snr_uniq[s]
+    with open(outfilename, 'w') as outfile:
+        for b in beams_unique:
+            # AA adding a loop over filters, instead of separate blocks of code per filter
+            for thisfilter in filters:
+                w = (beam == b) & (grism == f'G{thisfilter}')
+                waves_obj = wave[w]
+                npix_obj = npix[w]
+                snr_obj = snr[w]
+                waves_uniq, ind = np.unique(waves_obj, return_index = True)
+                npix_uniq = npix_obj[ind]
+                snr_uniq = snr_obj[ind]
+                s = np.argsort(waves_uniq)
+                waves_final_thisfilter = waves_uniq[s]
+                npix_final_thisfilter = npix_uniq[s]
+                snr_final_thisfilter = snr_uniq[s]
 
-            for lam, npx, sn in zip(waves_final_thisfilter, npix_final_thisfilter, snr_final_thisfilter):
-                outfile.write(f'{par}  G{thisfilter}  {b}  {lam} {npx} {sn}\n')
-
-    outfile.close()
+                for lam, npx, sn in zip(waves_final_thisfilter, npix_final_thisfilter, snr_final_thisfilter):
+                    outfile.write(f'{par}  G{thisfilter}  {b}  {lam} {npx} {sn}\n')

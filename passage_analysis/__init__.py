@@ -22,7 +22,7 @@ from utilities import read_config
 #from specmodel import model_resid_spline
 from find_cwt import find_cwt
 from find_cwt  import loop_field_cwt
-from find_cwt import test_obj_cwt
+#from find_cwt import test_obj_cwt # AA commented this out as it seems to be unused
 from fitting import emissionline_model
 from fitting import model_resid
 from fitting import fit_obj
