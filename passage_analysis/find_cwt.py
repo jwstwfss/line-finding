@@ -251,7 +251,6 @@ def loop_field_cwt(parno, args):
                 config_pars['transition_wave1'] = 13000. # MDR 2022/08/16
 
     tab = asciitable.read(tempfilename, format = 'no_header')
-    par = tab['col1']
     grism = tab['col2']
     beam = tab['col3']
     wave = tab['col4']
@@ -263,9 +262,8 @@ def loop_field_cwt(parno, args):
     wave =wave[s]
     npix = npix[s]
     snr = snr[s]
-    par = par[0]
     beams_unique = np.unique(beam)
-    outfilename = args.linelist_path + f'Par{par}lines.dat'
+    outfilename = args.linelist_path + f'Par{parno}lines.dat'
 
     with open(outfilename, 'w') as outfile:
         for b in beams_unique:
@@ -284,4 +282,4 @@ def loop_field_cwt(parno, args):
                 snr_final_thisfilter = snr_uniq[s]
 
                 for lam, npx, sn in zip(waves_final_thisfilter, npix_final_thisfilter, snr_final_thisfilter):
-                    outfile.write(f'{par}  G{thisfilter}  {b}  {lam} {npx} {sn}\n')
+                    outfile.write(f'{parno}  G{thisfilter}  {b}  {lam} {npx} {sn}\n')
