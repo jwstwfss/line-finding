@@ -150,12 +150,6 @@ def loop_field_cwt(parno, args):
     if not os.path.exists(args.linelist_path):
         os.mkdir(args.linelist_path)
 
-    print('Looking for spectra here: ', args.spec1D_path)
-    g115files = glob(args.spec1D_path + '*G115_1D.dat') # looking for 3 spectra for PASSAGE
-    g115files.sort()
-    g150files = glob(args.spec1D_path + '*G150_1D.dat')
-    g150files.sort()
-
     # M.D.R. - 10/08/2020
     print(f'\nSearching for default.config at: {args.code_dir}')
     config_pars = read_config(str(args.code_dir) + '/default.config')
@@ -177,7 +171,7 @@ def loop_field_cwt(parno, args):
     tempfilename = args.linelist_path + 'temp'
     config_pars['transition_wave'] = 13000. # MDR 2022/08/16
 
-    print(f'\nSearching for grism files in {args.spec1D_path}...')
+    print(f'\nLooking for grism spectra files in {args.spec1D_path}...')
 
     with open(tempfilename, 'w') as outfile:
         # AA added looping over all three PASSAGE filters, as opposed separate code block for each filter
