@@ -177,7 +177,7 @@ def loop_field_cwt(parno, args):
     tempfilename = args.linelist_path + 'temp'
     config_pars['transition_wave'] = 13000. # MDR 2022/08/16
 
-    print('\nSearching for grism files...')
+    print(f'\nSearching for grism files in {args.spec1D_path}...')
 
     with open(tempfilename, 'w') as outfile:
         # AA added looping over all three PASSAGE filters, as opposed separate code block for each filter
