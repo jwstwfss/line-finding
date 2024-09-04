@@ -283,14 +283,14 @@ if __name__ == "__main__":
         print('\033[94m' + "No region files found, creating those for you now."  + '\033[0m')
         utilities.create_regions(parno, args)
     else:
-        print(f'Found region files in {args.region_file_path}, proceeding..')
+        print(f'\nFound region files in {args.region_file_path}, proceeding..')
 
     # ---------check if .dat spectra files exist. If not, make them------------------
     spec_files = sorted(glob.glob(args.spectra_path + '*1D.dat'))
     if len(spec_files) == 0 or args.clobber_1D:
         convert_1Dspectra_fits_to_dat(args)
     else:
-        print(f'Found 1D.dat files in {args.spectra_path}, proceeding..')
+        print(f'\nFound 1D.dat files in {args.spectra_path}, proceeding..')
 
     # ---------check if R and C spectra files exist. If not, make them------------------
     C_files = sorted(glob.glob(args.spectra_path + '*C.dat'))
@@ -298,7 +298,7 @@ if __name__ == "__main__":
     if (len(C_files) == 0 and len(R_files) == 0) or args.clobber_RC:
         make_1D_spectra_per_orientation(args)
     else:
-        print(f'Found R & C files in {args.spectra_path}, proceeding..')
+        print(f'\nFound R & C files in {args.spectra_path}, proceeding..')
 
     # -------check if line list exists. If not, run code to create the linelist------------
     linelist_file = args.linelist_path + 'Par'+str(parno)+'lines.dat'
