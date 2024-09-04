@@ -171,12 +171,12 @@ def loop_field_cwt(parno, args):
 
     tempfilename = args.linelist_path + 'temp'
     config_pars['transition_wave'] = 13000. # MDR 2022/08/16
+    filters = ['115', '150', '200'] # AA added on 3 Sep 2024
 
     print(f'\nLooking for grism spectra files in {args.spectra_path}...')
 
     with open(tempfilename, 'w') as outfile:
         # AA added looping over all three PASSAGE filters, as opposed separate code block for each filter
-        filters = ['115', '150', '200']
 
         for index, thisfilter in enumerate(filters):
             print(f'Doing filter G{thisfilter} which is {index + 1} out of {len(filters)} filters..')
@@ -190,7 +190,7 @@ def loop_field_cwt(parno, args):
 
             # looping over all spectra files of the current filter
             for index2, filename in enumerate(thisfilter_files):
-                print(f'Starting obj id = {os.path.split(filename)[1]} which is {index2 + 1} of {len(thisfilter_files)}..')
+                print(f'Starting obj id = {os.path.basename(filename)} which is {index2 + 1} of {len(thisfilter_files)}..')
 
                 # get spectral data
                 # AA added the alternate handling below, to handle cases where spectra are available as .fits files rather than .dat
@@ -203,10 +203,12 @@ def loop_field_cwt(parno, args):
                     spdata.rename_columns(['wave', 'err', 'flat'], ['lambda', 'ferror', 'zero'])
                     spdata = spdata['lambda', 'flux', 'ferror', 'contam', 'zero']
 
-                trimmed_spec = trim_spec(spdata, None, None, config_pars)
+                if '115' in thisfilter: trimmed_spec = trim_spec(spdata, None, None, config_pars)
+                elif '150' in thisfilter: trimmed_spec = trim_spec(None, spdata, None, config_pars)
+                elif '200' in thisfilter: trimmed_spec = trim_spec(None, None, spdata, config_pars)
 
                 # look up the object in the se catalog and grab the a_image
-                filename = os.path.split(filename)[1] # AA dded, because otherwise it will grab the full path with all the directories, etc.
+                filename = os.path.basename(filename) # AA dded, because otherwise it will grab the full path with all the directories, etc.
                 beam = float(filename.split('_')[1].split('.')[0])
                 parno = parno #os.getcwd().split('/')[-2].split('Par')[-1] # fixed parallel field number to zero for the mudf program
 
@@ -250,6 +252,8 @@ def loop_field_cwt(parno, args):
                 config_pars = read_config(str(args.code_dir)+'/default.config')
                 config_pars['transition_wave1'] = 13000. # MDR 2022/08/16
 
+    # AA replacing code below to make it more concise
+    '''
     tab = asciitable.read(tempfilename, format = 'no_header')
     grism = tab['col2']
     beam = tab['col3']
@@ -283,3 +287,7 @@ def loop_field_cwt(parno, args):
 
                 for lam, npx, sn in zip(waves_final_thisfilter, npix_final_thisfilter, snr_final_thisfilter):
                     outfile.write(f'{parno}  G{thisfilter}  {b}  {lam} {npx} {sn}\n')
+    '''
+    tab = asc.read(tempfilename, names=['parno', 'filter', 'beam', 'wave', 'npix' ,'snr'])
+    tab.sort(['beam', 'filter', 'wave'])
+    tab.write(outfilename)

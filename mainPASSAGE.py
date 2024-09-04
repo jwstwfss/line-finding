@@ -4,7 +4,7 @@
     Author : Kalina Nedkova
     Modified: Ayan Acharyya
     Last modified: 3 September 2024
-    Examples: run mainPASSAGE.py --user ayan_hd
+    Examples: run mainPASSAGE.py --user ayan_gdrive
              run mainPASSAGE.py --verbose
 '''
 
@@ -37,8 +37,9 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Produces emission line maps for JWST-PASSAGE data.')
     parser.add_argument('--user', metavar='user', type=str, action='store', default='knedkova', help='Which user template to follow for directory structures?')
     parser.add_argument('--verbose', dest='verbose', action='store_true', default=False, help='Maximise prints to screen? Default is no.')
-    parser.add_argument('--clobber_1D', dest='clobber_1D', action='store_true', default=False, help='Over-write *1D.dat outputs? Default is no.')
-    parser.add_argument('--clobber_RC', dest='clobber_RC', action='store_true', default=False, help='Over-write *_R.fits and *_C.fits outputs? Default is no.')
+    parser.add_argument('--clobber_region', dest='clobber_region', action='store_true', default=False, help='Make *.reg files? Default is no.')
+    parser.add_argument('--clobber_1D', dest='clobber_1D', action='store_true', default=False, help='Make *1D.dat outputs? Default is no.')
+    parser.add_argument('--clobber_RC', dest='clobber_RC', action='store_true', default=False, help='Make *_R.fits and *_C.fits outputs? Default is no.')
     args = parser.parse_args()
 
     return args
@@ -159,7 +160,7 @@ def convert_1Dspectra_fits_to_dat(args):
             if filter in ['F115W', 'F150W', 'F200W']:
                 outfilename = args.spectra_path + os.path.basename(spec1d_filename).replace('1D.fits', f'G{filter[1:-1]}_1D.dat')
 
-                if not os.path.exists(outfilename) or args.clobber_1D:
+                if not os.path.exists(outfilename):
                     tab = Table(data[filter].data)
                     tab = make_table(tab)
 
@@ -283,14 +284,14 @@ if __name__ == "__main__":
         print('\033[94m' + "No region files found, creating those for you now."  + '\033[0m')
         utilities.create_regions(parno, args)
     else:
-        print(f'\nFound region files in {args.region_file_path}, proceeding..')
+        print(f'\nFound some region files in {args.region_file_path}, so proceeding to the next step. If you want to re-make the region files please rerun mainPASSAGE.py with --clobber_region option.')
 
     # ---------check if .dat spectra files exist. If not, make them------------------
     spec_files = sorted(glob.glob(args.spectra_path + '*1D.dat'))
     if len(spec_files) == 0 or args.clobber_1D:
         convert_1Dspectra_fits_to_dat(args)
     else:
-        print(f'\nFound 1D.dat files in {args.spectra_path}, proceeding..')
+        print(f'\nFound 1D.dat files in {args.spectra_path}, so proceeding to the next step. If you want make *1D.dat files please rerun mainPASSAGE.py with --clobber_1D option.')
 
     # ---------check if R and C spectra files exist. If not, make them------------------
     C_files = sorted(glob.glob(args.spectra_path + '*C.dat'))
@@ -298,7 +299,7 @@ if __name__ == "__main__":
     if (len(C_files) == 0 and len(R_files) == 0) or args.clobber_RC:
         make_1D_spectra_per_orientation(args)
     else:
-        print(f'\nFound R & C files in {args.spectra_path}, proceeding..')
+        print(f'\nFound R & C files in {args.spectra_path}, so proceeding to the next step. If you want to make *_R/C.fits files please rerun mainPASSAGE.py with --clobber_RC option.')
 
     # -------check if line list exists. If not, run code to create the linelist------------
     linelist_file = args.linelist_path + 'Par'+str(parno)+'lines.dat'
