@@ -37,7 +37,8 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Produces emission line maps for JWST-PASSAGE data.')
     parser.add_argument('--user', metavar='user', type=str, action='store', default='knedkova', help='Which user template to follow for directory structures?')
     parser.add_argument('--verbose', dest='verbose', action='store_true', default=False, help='Maximise prints to screen? Default is no.')
-    parser.add_argument('--clobber', dest='clobber', action='store_true', default=False, help='Over-write outputs? Default is no.')
+    parser.add_argument('--clobber_1D', dest='clobber_1D', action='store_true', default=False, help='Over-write *1D.dat outputs? Default is no.')
+    parser.add_argument('--clobber_RC', dest='clobber_RC', action='store_true', default=False, help='Over-write *_R.fits and *_C.fits outputs? Default is no.')
     args = parser.parse_args()
 
     return args
@@ -117,45 +118,6 @@ def substitute_fieldname_in_paths(args, field, placeholder='FIELD'):
     return args
 
 # -------------------------------------------------------------------------------------------------------
-def convert_1Dspectra_fits_to_dat(args):
-    '''
-    Converts all existing *.1D.fits to .dat files, for each available filter, for a given field
-    Adapted by Ayan Acharyya from passage_analysis/passage_convert_data.ipynb
-    '''
-    start_time = datetime.now()
-    print(f'Starting convert_1Dspectra_fits_to_dat..')
-
-    spec1d_files = sorted(glob.glob(args.spec1D_path + '*1D.fits'))
-    os.makedirs(args.spectra_path, exist_ok=True)
-
-    # ------looping over all 1D spectra files--------------
-    for index, spec1d_filename in enumerate(spec1d_files):
-        data = fits.open(spec1d_filename)
-        print(f'Doing {index + 1} of {len(spec1d_files)} files..')
-
-        for ext in range(1, len(data)):
-            filter = data[ext].header['EXTNAME'].strip()
-
-            if filter in ['F115W', 'F150W', 'F200W']:
-                outfilename = args.spectra_path + os.path.basename(spec1d_filename).replace('1D.fits', f'G{filter[1:-1]}_1D.dat')
-
-                if not os.path.exists(outfilename) or args.clobber:
-                    tab = Table(data[filter].data)
-                    tab = make_table(tab)
-
-                    if filter == 'F200W':
-                        wave_lim = np.max(Table(data[ext - 1].data)['wave'])
-                        tab = tab[tab['wave'] > wave_lim]
-
-                    # Write out the updated files.
-                    tab.write(outfilename, format='ascii.fixed_width_two_line', overwrite=True)
-                    print(f'Written {outfilename}')
-                else:
-                    print(f'It appears the .dat files were already created for this field. Skipping this field for this object.')
-
-    print(f'convert_1Dspectra_fits_to_dat completed in {timedelta(seconds=(datetime.now() - start_time).seconds)}')
-
-# -------------------------------------------------------------------------------------------------------
 def make_table(tab):
     '''
     Modifies and returns input table, by changing normalisation of flux, etc
@@ -175,6 +137,48 @@ def make_table(tab):
     return tab
 
 # -------------------------------------------------------------------------------------------------------
+def convert_1Dspectra_fits_to_dat(args):
+    '''
+    Converts all existing *.1D.fits to .dat files, for each available filter, for a given field
+    Adapted by Ayan Acharyya from passage_analysis/passage_convert_data.ipynb
+    '''
+    start_time = datetime.now()
+    print(f'Starting convert_1Dspectra_fits_to_dat..')
+
+    spec1d_files = sorted(glob.glob(args.spec1D_path + '*1D.fits'))
+    os.makedirs(args.spectra_path, exist_ok=True)
+
+    # ------looping over all 1D spectra files--------------
+    for index, spec1d_filename in enumerate(spec1d_files):
+        data = fits.open(spec1d_filename)
+        print(f'\nDoing {index + 1} of {len(spec1d_files)} files..')
+
+        for ext in range(1, len(data)):
+            filter = data[ext].header['EXTNAME'].strip()
+
+            if filter in ['F115W', 'F150W', 'F200W']:
+                outfilename = args.spectra_path + os.path.basename(spec1d_filename).replace('1D.fits', f'G{filter[1:-1]}_1D.dat')
+
+                if not os.path.exists(outfilename) or args.clobber_1D:
+                    tab = Table(data[filter].data)
+                    tab = make_table(tab)
+
+                    if filter == 'F200W':
+                        try:
+                            wave_lim = np.max(Table(data[ext - 1].data)['wave'])
+                            tab = tab[tab['wave'] > wave_lim]
+                        except:
+                            pass
+
+                    # Write out the updated files.
+                    tab.write(outfilename, format='ascii.fixed_width_two_line', overwrite=True)
+                    print(f'Written {outfilename}')
+                else:
+                    print(f'It appears the .dat files were already created for this object/filter. Skipping this filter for this object.')
+
+    print(f'convert_1Dspectra_fits_to_dat completed in {timedelta(seconds=(datetime.now() - start_time).seconds)}')
+
+# -------------------------------------------------------------------------------------------------------
 def make_1D_spectra_per_orientation(args):
     '''
     Makes *1D_C.dat and *1D_R.dat spectra files, corresponding to each grism orientations, from *beams.fits files, for a given field
@@ -190,49 +194,53 @@ def make_1D_spectra_per_orientation(args):
 
     # ------looping over all beam files--------------
     for index, beam_filename in enumerate(beam_files):
-        print(f'Doing {index + 1} of {len(beam_files)} files..')
-
+        print(f'\nDoing {index + 1} of {len(beam_files)} files..')
         objid = int(os.path.basename(beam_filename).split('_')[1].split('.')[0])
-        z = speccat[speccat['id'] == objid]['redshift'].value[0]
+        outfile_thisobj = glob.glob(args.spectra_path + f'Par{args.parno}_{objid:05d}.*_1D_*.dat')
 
-        mb = multifit.MultiBeam(beam_filename, fcontam=0.1, sys_err=0.02, min_sens=0.05, MW_EBV=-1, group_name='', verbose=False)
+        if len(outfile_thisobj) == 0: # if no R/C file exists for this object id
+            z = speccat[speccat['id'] == objid]['redshift'].value[0]
 
-        Cgrism_beams = [mb.beams[k] for k in range(len(mb.beams)) if mb.beams[k].grism.filter == 'GR150C']
-        Rgrism_beams = [mb.beams[k] for k in range(len(mb.beams)) if mb.beams[k].grism.filter == 'GR150R']
+            mb = multifit.MultiBeam(beam_filename, fcontam=0.1, sys_err=0.02, min_sens=0.05, MW_EBV=-1, group_name='', verbose=False)
 
-        if len(Cgrism_beams) > 0:
-            mb_C = multifit.MultiBeam(beams=Cgrism_beams, fcontam=0.1, sys_err=0.02, min_sens=0.05, MW_EBV=-1, group_name='')
+            Cgrism_beams = [mb.beams[k] for k in range(len(mb.beams)) if mb.beams[k].grism.filter == 'GR150C']
+            Rgrism_beams = [mb.beams[k] for k in range(len(mb.beams)) if mb.beams[k].grism.filter == 'GR150R']
 
-            # this catches cases where spectrum contains only zeros (very rare)
-            # The fit will crash in such cases
-            try:
-                tfitC = mb_C.template_at_z(z, fitter='bounded')
-                keys_C = mb_C.oned_spectrum(tfit=tfitC, bin=1).keys()
-            except:
-                keys_C = mb_C.oned_spectrum(bin=1).keys()
+            if len(Cgrism_beams) > 0:
+                mb_C = multifit.MultiBeam(beams=Cgrism_beams, fcontam=0.1, sys_err=0.02, min_sens=0.05, MW_EBV=-1, group_name='')
 
-            for c in keys_C:
-                t_out = make_table(mb_C.oned_spectrum(tfit=tfitC, bin=1)[c])
-                outfilename_C = args.spectra_path + os.path.basename(beam_filename).replace('beams.fits', c + '_1D_C.dat')
-                t_out.write(outfilename_C, format='ascii.fixed_width_two_line', overwrite=True)
-                print(f'Written {outfilename_C}')
+                # this catches cases where spectrum contains only zeros (very rare)
+                # The fit will crash in such cases
+                try:
+                    tfitC = mb_C.template_at_z(z, fitter='bounded')
+                    keys_C = mb_C.oned_spectrum(tfit=tfitC, bin=1).keys()
+                except:
+                    keys_C = mb_C.oned_spectrum(bin=1).keys()
 
-        if len(Rgrism_beams) > 0:
-            mb_R = multifit.MultiBeam(beams=Rgrism_beams, fcontam=0.1, sys_err=0.02, min_sens=0.05, MW_EBV=-1, group_name='')
+                for c in keys_C:
+                    t_out = make_table(mb_C.oned_spectrum(tfit=tfitC, bin=1)[c])
+                    outfilename_C = args.spectra_path + os.path.basename(beam_filename).replace('beams.fits', c + '_1D_C.dat')
+                    t_out.write(outfilename_C, format='ascii.fixed_width_two_line', overwrite=True)
+                    print(f'Written {outfilename_C}')
 
-            # this catches cases where spectrum contains only zeros (very rare)
-            # The fit will crash in such cases
-            try:
-                tfitR = mb_R.template_at_z(z, fitter='bounded')
-                keys_R = mb_R.oned_spectrum(tfit=tfitR, bin=1).keys()
-            except:
-                keys_R = mb_R.oned_spectrum(bin=1).keys()
+            if len(Rgrism_beams) > 0:
+                mb_R = multifit.MultiBeam(beams=Rgrism_beams, fcontam=0.1, sys_err=0.02, min_sens=0.05, MW_EBV=-1, group_name='')
 
-            for r in keys_R:
-                t_out = make_table(mb_R.oned_spectrum(tfit=tfitR, bin=1)[r])
-                outfilename_R = args.spectra_path + os.path.basename(beam_filename).replace('beams.fits', c + '_1D_R.dat')
-                t_out.write(outfilename_R, format='ascii.fixed_width_two_line', overwrite=True)
-                print(f'Written {outfilename_R}')
+                # this catches cases where spectrum contains only zeros (very rare)
+                # The fit will crash in such cases
+                try:
+                    tfitR = mb_R.template_at_z(z, fitter='bounded')
+                    keys_R = mb_R.oned_spectrum(tfit=tfitR, bin=1).keys()
+                except:
+                    keys_R = mb_R.oned_spectrum(bin=1).keys()
+
+                for r in keys_R:
+                    t_out = make_table(mb_R.oned_spectrum(tfit=tfitR, bin=1)[r])
+                    outfilename_R = args.spectra_path + os.path.basename(beam_filename).replace('beams.fits', c + '_1D_R.dat')
+                    t_out.write(outfilename_R, format='ascii.fixed_width_two_line', overwrite=True)
+                    print(f'Written {outfilename_R}')
+        else:
+            print(f'It appears the R/C files were already created for this object. Skipping object {objid:05d}.')
 
     print(f'make_1D_spectra_per_orientation completed in {timedelta(seconds=(datetime.now() - start_time).seconds)}')
 
@@ -257,6 +265,7 @@ if __name__ == "__main__":
 
     # -----pad field name if needed------
     if args.is_fieldname_padded: parno = f'{parno:03}'
+    args.parno = parno
 
     # -----convert pseudo paths to proper paths------
     args = substitute_fieldname_in_paths(args, str(parno))
@@ -278,7 +287,7 @@ if __name__ == "__main__":
 
     # ---------check if .dat spectra files exist. If not, make them------------------
     spec_files = sorted(glob.glob(args.spectra_path + '*1D.dat'))
-    if len(spec_files) == 0 or args.clobber:
+    if len(spec_files) == 0 or args.clobber_1D:
         convert_1Dspectra_fits_to_dat(args)
     else:
         print(f'Found 1D.dat files in {args.spectra_path}, proceeding..')
@@ -286,7 +295,7 @@ if __name__ == "__main__":
     # ---------check if R and C spectra files exist. If not, make them------------------
     C_files = sorted(glob.glob(args.spectra_path + '*C.dat'))
     R_files = sorted(glob.glob(args.spectra_path + '*R.dat'))
-    if (len(C_files) == 0 and len(R_files) == 0) or args.clobber:
+    if (len(C_files) == 0 and len(R_files) == 0) or args.clobber_RC:
         make_1D_spectra_per_orientation(args)
     else:
         print(f'Found R & C files in {args.spectra_path}, proceeding..')
