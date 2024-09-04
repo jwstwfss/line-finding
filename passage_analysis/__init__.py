@@ -44,3 +44,6 @@ import pickle
 # except ImportError:
 #     pass
 # #    print 'No stacking module. It is not needed for line finding. Skipping'
+
+import warnings
+warnings.filterwarnings('ignore')

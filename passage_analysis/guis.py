@@ -393,7 +393,7 @@ def show2dNEW(grism, parno, obid, zeroarr, user, trans, args, zran1=None, zran2=
     zrad = 10.0
     workingdir = os.getcwd()
 
-    path2d = args.spec2D_file_path + f'Par{parno}_{obid:05d}.2D.fits'
+    path2d = args.spec2D_path + f'Par{parno}_{obid:05d}.2D.fits'
 
     pix_per_um = 1 / (1e-4 * 46.934)  # GR150R 47.015 for GR150C
 

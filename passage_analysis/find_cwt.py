@@ -5,8 +5,10 @@ from passage_analysis import *
 from astropy.table import Table
 from astropy.io import ascii as asc
 from astropy.io import fits
+from datetime import datetime, timedelta
+import pandas as pd
 
-def find_cwt(lam, flux, err, fwhm_est_pix, beam_name, config_pars, plotflag = True):
+def find_cwt(lam, flux, err, fwhm_est_pix, beam, config_pars, plotflag = True):
     '''
     AA removed 'zeros' from the function definition as it seemed to be an unused variable
     '''
@@ -139,155 +141,88 @@ def find_cwt(lam, flux, err, fwhm_est_pix, beam_name, config_pars, plotflag = Tr
 
     if plotflag==True:
             axarr[1].plot(lam[real_peaks], flux[real_peaks], 'rs', ms=9, markeredgecolor= 'r', markerfacecolor = 'none', markeredgewidth=2)
-            plt.title(beam_name)
+            plt.title(f'{beam}')
             plt.show(block=True)
 
     return [lam[real_peaks], flux[real_peaks], npix_real, snr_real, cwarray, cont_filter, lam[peaks], flux[peaks]]
 
+# -------------------------------------------------------------------------------------------------------------------
 def loop_field_cwt(parno, args):
-    # no inputs and run from inside the data directory
-    # KVN updating this to write the linelist to the 'output' directory... take path to data as input
-    # AA updated this, for flexibility, to take args as input, which contains the directory structure
-    if not os.path.exists(args.linelist_path):
-        os.mkdir(args.linelist_path)
+    '''
+    Function to create linelist for a given PASSAGE field; incorporates each available filter for each available object
+    Saves linelist as ASCII file
 
-    # M.D.R. - 10/08/2020
-    print(f'\nSearching for default.config at: {args.code_dir}')
-    config_pars = read_config(str(args.code_dir) + '/default.config')
+    Original code by M.D.R and K.V.N
+    KVN updating this to write the linelist to the 'output' directory... take path to data as input
+    AA updated this, for flexibility, to take args as input, which contains the directory structure
+    AA further modified this whole function to make it simpler and more concise
+    '''
 
-    photcat_file_path = args.photcat_file_path + f'Par{parno}_phot*.fits'
-    print(f'Searching for catalogs at: {photcat_file_path}')
-    catalogs = glob(photcat_file_path) # get list of available catalogs
-    catalogs.sort()
-
-    print(f'\nI found the following catalogs: {catalogs}')
-    cat = Table.read(catalogs[0])
-
-    print(f'\nCatalog opened successfully: {catalogs[0]}')
-    # M.D.R. - 10/08/2020
-
-    a_images = cat['a_image']
-    beam_se = cat['id']
-
-    tempfilename = args.linelist_path + 'temp'
-    config_pars['transition_wave'] = 13000. # MDR 2022/08/16
+    start_time = datetime.now()
     filters = ['115', '150', '200'] # AA added on 3 Sep 2024
 
+    # -------displaying/creating relevant paths----------------
+    print(f'\nSearching for default.config at: {args.code_dir}')
     print(f'\nLooking for grism spectra files in {args.spectra_path}...')
 
-    with open(tempfilename, 'w') as outfile:
-        # AA added looping over all three PASSAGE filters, as opposed separate code block for each filter
+    print(f'\nSearching for catalogs at: {args.photcat_file_path}')
+    catalogs = glob(args.photcat_file_path + f'Par{parno}_phot*.fits') # get list of available catalogs
+    catalogs.sort()
+    print(f'\nI found the following catalogs: {catalogs}..')
+    cat = Table.read(catalogs[0])
+    print(f'..and successfully opened the first one!')
+    # M.D.R. - 10/08/2020
 
-        for index, thisfilter in enumerate(filters):
-            print(f'Doing filter G{thisfilter} which is {index + 1} out of {len(filters)} filters..')
-
-            # AA added the alternate handling below, to handle cases where spectra are available as .fits files rather than .dat
-            if args.spectra_available_for_individual_filters:
-                thisfilter_files = glob(args.spectra_path + f'*{thisfilter}_1D.dat') # spectra files available in .dat format, separately for each filter
-            else:
-                thisfilter_files = glob(args.spectra_path + f'Par{parno}_*.1D.fits') # spectra files available in .fits format, all filters in one file for a given object
-            thisfilter_files.sort()
-
-            # looping over all spectra files of the current filter
-            for index2, filename in enumerate(thisfilter_files):
-                print(f'Starting obj id = {os.path.basename(filename)} which is {index2 + 1} of {len(thisfilter_files)}..')
-
-                # get spectral data
-                # AA added the alternate handling below, to handle cases where spectra are available as .fits files rather than .dat
-                if args.spectra_available_for_individual_filters:
-                    spdata = asc.read(filename, names = ['lambda', 'flux', 'ferror', 'contam', 'zero'])
-                else:
-                    data = fits.open(filename)
-                    if not f'F{thisfilter}W' in data: continue # skip to the next object, if this filter does not exist in this object # AA added
-                    spdata = Table(data[f'F{thisfilter}W'].data)
-                    spdata.rename_columns(['wave', 'err', 'flat'], ['lambda', 'ferror', 'zero'])
-                    spdata = spdata['lambda', 'flux', 'ferror', 'contam', 'zero']
-
-                if '115' in thisfilter: trimmed_spec = trim_spec(spdata, None, None, config_pars)
-                elif '150' in thisfilter: trimmed_spec = trim_spec(None, spdata, None, config_pars)
-                elif '200' in thisfilter: trimmed_spec = trim_spec(None, None, spdata, config_pars)
-
-                # look up the object in the se catalog and grab the a_image
-                filename = os.path.basename(filename) # AA dded, because otherwise it will grab the full path with all the directories, etc.
-                beam = float(filename.split('_')[1].split('.')[0])
-                parno = parno #os.getcwd().split('/')[-2].split('Par')[-1] # fixed parallel field number to zero for the mudf program
-
-                w = np.where(beam_se == beam)
-                w = w[0] # because of tuples
-                a_image = a_images[w][0]
-                fwhm_est_pix = a_image * 2.0
-
-                # unpack spectrum and check that it is long enough to proceed
-                lam = trimmed_spec[0]
-                flux_corr = trimmed_spec[1] - trimmed_spec[3]
-                err = trimmed_spec[2]
-
-                if len(lam) < config_pars['min_spec_length']:
-                    continue
-
-                # cwt it and unpack and write results
-                thisfilter_cwt = find_cwt(lam, flux_corr, err, fwhm_est_pix, str(int(beam)), config_pars, plotflag=False)
-                lam_cwt = thisfilter_cwt[0]
-                flam_cwt = thisfilter_cwt[1]
-                npix_cwt = thisfilter_cwt[2]
-                snr_cwt = thisfilter_cwt[3]
-
-                for i in np.arange(len(lam_cwt)):
-                    if args.verbose: print(beam, f'G{thisfilter}', lam_cwt[i], npix_cwt[i], fwhm_est_pix, snr_cwt[i]) # AA made this optional, to reduce screen output
-                    outfile.write(f'{parno}  {thisfilter}  {int(beam)}  {lam_cwt[i]}  {npix_cwt[i]}  {snr_cwt[i]}\n')
-
-                if config_pars['n_sigma_for_2pix_lines'] != False:
-                    config_pars['npix_thresh'] = 2
-                    config_pars['n_sigma_above_cont'] = config_pars['n_sigma_for_2pix_lines']
-                    thisfilter_cwt = find_cwt(lam, flux_corr, err, fwhm_est_pix, str(int(beam)), config_pars, plotflag=False)
-                    lam_cwt = thisfilter_cwt[0]
-                    flam_cwt = thisfilter_cwt[1]
-                    npix_cwt = thisfilter_cwt[2]
-                    snr_cwt = thisfilter_cwt[3]
-                    for i in np.arange(len(lam_cwt)):
-                        if args.verbose: print(beam, f'G{thisfilter}', lam_cwt[i], npix_cwt[i], fwhm_est_pix, snr_cwt[i]) # AA made this optional, to reduce screen output
-                        outfile.write(f'{parno}  {thisfilter}  {int(beam)}  {lam_cwt[i]}  {npix_cwt[i]}  {snr_cwt[i]}\n')
-
-                # go back to the beginning with the old config pars
-                config_pars = read_config(str(args.code_dir)+'/default.config')
-                config_pars['transition_wave1'] = 13000. # MDR 2022/08/16
-
-    # AA replacing code below to make it more concise
-    '''
-    tab = asciitable.read(tempfilename, format = 'no_header')
-    grism = tab['col2']
-    beam = tab['col3']
-    wave = tab['col4']
-    npix = tab['col5']
-    snr = tab['col6']
-    s = np.argsort(beam)
-    beam = beam[s]
-    grism = grism[s]
-    wave =wave[s]
-    npix = npix[s]
-    snr = snr[s]
-    beams_unique = np.unique(beam)
+    if not os.path.exists(args.linelist_path): os.mkdir(args.linelist_path)
     outfilename = args.linelist_path + f'Par{parno}lines.dat'
+    output_df = pd.DataFrame()
 
-    with open(outfilename, 'w') as outfile:
-        for b in beams_unique:
-            # AA adding a loop over filters, instead of separate blocks of code per filter
-            for thisfilter in filters:
-                w = (beam == b) & (grism == f'G{thisfilter}')
-                waves_obj = wave[w]
-                npix_obj = npix[w]
-                snr_obj = snr[w]
-                waves_uniq, ind = np.unique(waves_obj, return_index = True)
-                npix_uniq = npix_obj[ind]
-                snr_uniq = snr_obj[ind]
-                s = np.argsort(waves_uniq)
-                waves_final_thisfilter = waves_uniq[s]
-                npix_final_thisfilter = npix_uniq[s]
-                snr_final_thisfilter = snr_uniq[s]
+    # -------looping over all three PASSAGE filters----------------
+    for index, thisfilter in enumerate(filters):
+        print(f'Doing filter G{thisfilter} which is {index + 1} out of {len(filters)} filters..')
 
-                for lam, npx, sn in zip(waves_final_thisfilter, npix_final_thisfilter, snr_final_thisfilter):
-                    outfile.write(f'{parno}  G{thisfilter}  {b}  {lam} {npx} {sn}\n')
-    '''
-    tab = asc.read(tempfilename, names=['parno', 'filter', 'beam', 'wave', 'npix' ,'snr'])
-    tab.sort(['beam', 'filter', 'wave'])
-    tab.write(outfilename)
+        thisfilter_files = glob(args.spectra_path + f'*{thisfilter}_1D.dat')
+        thisfilter_files.sort()
+
+        # ------------looping over all spectra files of the current filter------------
+        for index2, filename in enumerate(thisfilter_files):
+            print(f'Starting obj id = {os.path.basename(filename)} which is {index2 + 1} of {len(thisfilter_files)}..')
+
+            # -------read in config_pars freshly for each iteration (in case it gets changed within this loop)----------
+            config_pars = read_config(str(args.code_dir)+'/default.config')
+            config_pars['transition_wave1'] = 13000. # MDR 2022/08/16
+
+            # ------------get spectral data-----------------
+            spdata = asc.read(filename, names = ['lambda', 'flux', 'ferror', 'contam', 'zero'])
+
+            if '115' in thisfilter: trimmed_spec = trim_spec(spdata, None, None, config_pars)
+            elif '150' in thisfilter: trimmed_spec = trim_spec(None, spdata, None, config_pars)
+            elif '200' in thisfilter: trimmed_spec = trim_spec(None, None, spdata, config_pars)
+
+            trimmed_df = pd.DataFrame({'lambda': trimmed_spec[0], 'flux':trimmed_spec[1], 'error':trimmed_spec[2], 'contam':trimmed_spec[3], 'zero':trimmed_spec[4]}) # converting into a dataframe for easier handling and readability
+            if len(trimmed_df) < config_pars['min_spec_length']: continue # check if spectrum is long enough to proceed
+            trimmed_df['flux_corrected'] = trimmed_df['flux'] - trimmed_df['contam']
+
+            # -----------------look up the object in the se catalog and grab the a_image-----------------
+            beam = int(os.path.basename(filename).split('_')[1].split('.')[0])
+            fwhm_est_pix = cat[cat['id'] == beam]['a_image'][0] * 2.0
+
+            # -----------------cwt it and unpack and append the results to dataframe-----------------
+            thisfilter_cwt = find_cwt(trimmed_df['lambda'].values, trimmed_df['flux_corrected'].values, trimmed_df['error'].values, fwhm_est_pix, beam, config_pars, plotflag=False)
+            cwt_df = pd.DataFrame({'lambda': thisfilter_cwt[0], 'flux':thisfilter_cwt[1], 'npix':thisfilter_cwt[2], 'snr':thisfilter_cwt[3], 'beam':beam, 'filter':thisfilter}) # converting into a dataframe for easier handling and readability
+            output_df = pd.concat([output_df, cwt_df])
+
+            # -----------------repeat above cwt step if needed-----------------
+            if config_pars['n_sigma_for_2pix_lines']:
+                thisfilter_cwt = find_cwt(trimmed_df['lambda'].values, trimmed_df['flux_corrected'].values, trimmed_df['error'].values, fwhm_est_pix, beam, config_pars, plotflag=False)
+                cwt_df = pd.DataFrame({'lambda': thisfilter_cwt[0], 'flux': thisfilter_cwt[1], 'npix': thisfilter_cwt[2], 'snr': thisfilter_cwt[3], 'beam':beam, 'filter':thisfilter})  # converting into a dataframe for easier handling and readability
+                output_df = pd.concat([output_df, cwt_df])
+
+    # -----------------save the final linelist file----------------------
+    output_df['par'] = parno
+    output_df = output_df.sort_values(['beam', 'filter', 'lambda'])
+    output_df['filter'] = output_df['filter'].map(lambda x: f'G{x}')
+    output_df = output_df[['par', 'filter', 'beam', 'lambda', 'npix', 'snr']] # to re-order columsn before saving to file
+    output_df.to_csv(outfilename, sep='\t', index=None, header=False)
+
+    print(f'loop_find_cwt() completed in {timedelta(seconds=(datetime.now() - start_time).seconds)}')
