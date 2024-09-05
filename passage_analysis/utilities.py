@@ -70,11 +70,14 @@ def read_config(config, availgrism='both'):
 # Written by Mason Huberty and adapted by KVN to work as part of the line finding software
 
 def write_obj_region(parno, region_file_path, catalog, regfile_name, xoffset, yoffset, w, b_width, b_length):
-    file = open(region_file_path + f'Par{parno}{regfile_name}', 'a')
+    region_file = region_file_path + f'Par{parno}{regfile_name}'
+    if os.path.exists(region_file): os.remove(region_file) # AA added on 2024/09/05 so as to delete any faulty files before appending
+
+    file = open(region_file, 'a')
     for i in range(len(catalog)):
         ra, dec = catalog['ra'][i], catalog['dec'][i]
         x, y = w.all_world2pix(ra, dec, 1)
-        file.write(f'box({x-xoffset},{y-yoffset},{b_width},{b_length},0.0) # color=red text={{catalog["id"][i]}} font=times 10 bold italic textangle=30\n')
+        file.write(f'box({x-xoffset},{y-yoffset},{b_width},{b_length},0.0) # color=red text={{{catalog["id"][i]}}} font="times 10 bold italic" textangle=30\n')
     file.close
 
 
@@ -91,9 +94,11 @@ def create_regions(parno, args):
     os.makedirs(args.region_file_path, exist_ok=True)
 
     # Direct image region files
-    f = open(args.region_file_path + f'Par{parno}regions_phot.reg','a')
+    direct_region_file = args.region_file_path + f'Par{parno}regions_phot.reg'
+    if os.path.exists(direct_region_file): os.remove(direct_region_file) # AA added on 2024/09/05 so as to delete any faulty files before appending
+    f = open(direct_region_file,'a')
     for i in range(len(cat)):
-        f.write(f'WCS;circle({cat["ra"][i]},{cat["dec"][i]},0.5') # color=green text={'+str(cat['id'][i])+' z='+str(round(cat['redshift'][i],3))+'} font='times 10 bold italic' textangle=30\n')
+        f.write(f'WCS;circle({cat["ra"][i]},{cat["dec"][i]},0.5)\n') # color=green text={'+str(cat['id'][i])+' z='+str(round(cat['redshift'][i],3))+'} font='times 10 bold italic' textangle=30\n')
     f.close()
 
     #This and subsequent are for the first order beams. Offsets taken from the config files
