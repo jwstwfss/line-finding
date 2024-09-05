@@ -161,6 +161,10 @@ if __name__ == "__main__":
     else:
         print(f'\nFound some region files in {args.region_file_path}, so proceeding to the next step. If you want to re-make the region files please rerun mainPASSAGE.py with --clobber_region option.')
 
+    # ---------check if headers for 2D spectra need to be updated, and update if necessary-----------
+    if fits_headers_need_updating(args.spec2D_path):
+        update_fits_headers(args.spec2D_path)
+
     # ---------check if .dat spectra files exist. If not, make them------------------
     spec_files = sorted(glob.glob(args.spectra_path + '*1D.dat'))
     if len(spec_files) == 0 or args.clobber_1D:

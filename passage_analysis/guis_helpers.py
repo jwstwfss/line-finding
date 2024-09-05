@@ -87,11 +87,14 @@ def display_image_in_DS9(frame_number, image_file, region_file, verbose=True):
         msg = f"Opening F{frame_number}: {os.path.basename(image_file)} | Region File: {region_file}"
         print(msg)
 
+    image_file = image_file.replace(' ', '\\ ') # AA added on 2024/09/05: to handle spaces in file path, just in case
+    region_file = region_file.replace(' ', '\\ ') # AA added on 2024/09/05: to handle spaces in file path, just in case
+
     os.system(f"xpaset -p {ds9_title} frame {frame_number}")  # Specify the frame
-    os.system(f"xpaset -p {ds9_title} file {image_file}")
+    os.system(f'xpaset -p {ds9_title} file "{image_file}"') # AA added the "" around {image_file}, on 2024/09/05 to take care of spaces in file name, if any
 
     if region_file:
-        os.system(f"xpaset -p {ds9_title} regions load {region_file}")
+        os.system(f'xpaset -p {ds9_title} regions load "{region_file}"') # AA added the "" around {region_file}, on 2024/09/05 to take care of spaces in file name, if any
     # os.system(f"xpaset -p {ds9_title} cmap bb")
     return
 

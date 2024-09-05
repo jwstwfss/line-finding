@@ -148,6 +148,60 @@ def make_table(tab):
     return tab
 
 # -------------------------------------------------------------------------------------------------------
+def fits_headers_need_updating(filename, verbose=True):
+    '''
+    Determine if the header of a given fits filename (or of all fits files in a given directory) needs updating, returns boolean
+    Adapted by AA from passage_analysis/passage_convert_data.ipynb; Sep 2024
+    '''
+
+    if os.path.isdir(filename): # if the passed argument is actually a directory (instead of a filename)
+        files = sorted(glob.glob(filename + '*.fits'))
+        if len(files) > 0:
+            filename = files[0] # just pick the first available .fits file as the filename
+        else:
+            if verbose: print(f'\nThere are no .fits files in {filename}, so could not update headers.')
+            return False
+
+    data = fits.open(filename)
+    header = data[2].header
+    needs_updating = 'RADESYS' in header and header['RADESYS'] != 'ICRS'
+
+    if verbose:
+        if needs_updating:
+            print(f'\nFits headers are not updated. Updating all now.')
+        else:
+            print(f'\nFits headers seem to be already updated. Skipping this step.')
+
+    return needs_updating
+
+# -------------------------------------------------------------------------------------------------------
+def update_fits_headers(pathname):
+    '''
+    Updates headers of all existing *.fits files, in a given directory
+    Adapted by AA from passage_analysis/passage_convert_data.ipynb; Sep 2024
+    '''
+    start_time = datetime.now()
+    print(f'Starting update_fits_headers..')
+
+    if fits_headers_need_updating(pathname, verbose=False):
+        spec2d_files = sorted(glob.glob(pathname + '*.fits'))
+
+        # ------looping over all 2D spectra files--------------
+        for index, spec2d_filename in enumerate(spec2d_files):
+            print(f'Doing {index + 1} of {len(spec2d_files)} files..')
+            hdulist = fits.open(spec2d_filename)
+            for i in range(len(hdulist)):
+                header = hdulist[i].header
+                try:
+                    header['RADESYS'] = 'ICRS'
+                except:
+                    print('no RADESYS in header')
+
+            hdulist.writeto(spec2d_filename, overwrite='True')
+
+    print(f'update_fits_headers completed in {timedelta(seconds=(datetime.now() - start_time).seconds)}')
+
+# -------------------------------------------------------------------------------------------------------
 def convert_1Dspectra_fits_to_dat(args):
     '''
     Converts all existing *.1D.fits to .dat files, for each available filter, for a given field

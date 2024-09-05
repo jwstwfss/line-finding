@@ -25,6 +25,7 @@
 # to show the grism stamps that have a wavelength solution applied. When using
 # the IRAF display command, ds9 would fail to recognize this coordinate system.
 # The XPA system can be downloaded here: http://hea-www.harvard.edu/RD/xpa/index.html
+# AA: The above link for XPA does not work anymore; please use https://sites.google.com/cfa.harvard.edu/saoimageds9/download OR https://github.com/ericmandel/xpa/tree/master instead
 #
 ##########################################################################
 import os
@@ -539,7 +540,7 @@ def add_extra_lines(ax, axtrans, xmin, xmax):
     return "Added line label to", str(ax)
 
 
-def plot_chooseSpec(spdata1, spdata2, spdata3, config_pars, plottitle, outdir, zset=None, orientation=""):
+def plot_chooseSpec(spdata1, spdata2, spdata3, config_pars, plottitle, outdir, zset=None, orientation="", verbose='True'):
     if verbose == True:
         print("\nRunning plot_chooseSpec...\n")  # adapted from plot_object by KVN 2024/07/22
     """
@@ -569,9 +570,12 @@ def plot_chooseSpec(spdata1, spdata2, spdata3, config_pars, plottitle, outdir, z
     # apply the mask to the wavelength array
     masked_spec_lam = np.ma.masked_where(np.ma.getmask(spec_val1), spec_lam1)
 
+
     # generate the plot grid.
     plt.ion()
+    print(f'\nDeb measure_z_interactive.py 576: reached till here; spdata1={len(spdata1)}, spdata2={len(spdata2)}, spdata3={len(spdata3)}') ##
     fig = plt.figure(1, figsize=(11, 12), dpi=75)
+    print(f'\nDeb measure_z_interactive.py 578: reached till here') ##
     plt.clf()
     # gs = gridspec.GridSpec(3, 4)
     gs = gridspec.GridSpec(3, 1)
@@ -625,7 +629,7 @@ def plot_chooseSpec(spdata1, spdata2, spdata3, config_pars, plottitle, outdir, z
     ax2.set_title(plottitle+" R", size="xx-large")
     ax3.set_title(plottitle+" C", size="xx-large")
 
-    plt.tight_layout() 
+    plt.tight_layout()
     fig.savefig(plotfilename)
     plt.draw()
     
@@ -1272,7 +1276,7 @@ def inspect_object(
 
         # KVN: trim_spec has been updated to take 3 grism filters
         # and the code now does this for the row & column (R & C)
-        plot_chooseSpec(spdata_T, spdata_R, spdata_C, config_pars, plottitle, outdir)
+        plot_chooseSpec(spdata_T, spdata_R, spdata_C, config_pars, plottitle, outdir, verbose=args.verbose)
         print_prompt("If you would like to change which spectrum is being fit, the options are: grismR, grismC, grismRcontam, grismCcontam, CombContam, or Comb to go back to the combined at any time. ")
 
         # Determine the largest extent of the object so broadening of the lines can be accounted for in the fitting. MDR 2022/06/30

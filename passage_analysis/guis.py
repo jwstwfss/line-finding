@@ -33,6 +33,7 @@ def showSpec2D_PASSAGE(parno, obid, path_to_spec2D=''):
 
     # for a given data file extract the data information that we want to be displayed in ds9
     spec2D_key_DS9 = extract_image_extensions_key(spec2D_file)
+    spec2D_file = spec2D_file.replace(' ', '\\ ') # AA added on 2024/09/05: to handle spaces in file path, just in case
 
     # display in ds9 instance of a given "title"
     SPEC2D_TITLE_DS9 = "PASSAGE_spec2D"
@@ -54,7 +55,7 @@ def showSpec2D_PASSAGE(parno, obid, path_to_spec2D=''):
 
         # # display frame
         if ext is not None:
-            command = f"xpaset -p {SPEC2D_TITLE_DS9} fits {spec2D_file}[{ext}]"
+            command = f'xpaset -p {SPEC2D_TITLE_DS9} fits "{spec2D_file}"[{ext}]' # AA added the "" around {spec2D_file}, on 2024/09/05 to take care of spaces in file name, if any
             os.system(command)
         else:
             command = f"xpaset -p {SPEC2D_TITLE_DS9} frame clear"
@@ -142,8 +143,6 @@ def showDirect_PASSAGE(parno, path_to_drizzled_images='', path_to_region_files='
             f"Par{parno}_{grism_file_ext}_f200w-gr150r_drz_sci.fits",
         ],
     }
-
-    print(f'\nDeb guis.py 146: parno={parno}, grism_file_ext={grism_file_ext}, images dict={images}') ##
 
     image_paths = {}
     for filter_name, filenames in images.items():
@@ -396,7 +395,6 @@ def show2dNEW(grism, parno, obid, zeroarr, user, trans, args, zran1=None, zran2=
     workingdir = os.getcwd()
 
     path2d = args.spec2D_path + f'Par{parno}_{obid:05d}.2D.fits'
-    print(f'\nDeb guis.py 397: obid={obid:05d}, path2d={path2d}') ##
 
     pix_per_um = 1 / (1e-4 * 46.934)  # GR150R 47.015 for GR150C
 
@@ -441,8 +439,6 @@ def show2dNEW(grism, parno, obid, zeroarr, user, trans, args, zran1=None, zran2=
         for tracker in doug:
             if grism == infits[tracker].header["EXTVER"]:
                 extension_check = 1
-
-    print(f'\nDeb guis.py 445: parno={parno}, extension_check={extension_check}, input_direct={input_direct}, input_grism={input_grism}') ##
 
     if extension_check:
         cutout_index = infits.index_of(("SCI", grism))
