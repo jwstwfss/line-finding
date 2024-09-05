@@ -171,19 +171,23 @@ def convert_1Dspectra_fits_to_dat(args):
                 outfilename = args.spectra_path + os.path.basename(spec1d_filename).replace('1D.fits', f'G{filter[1:-1]}_1D.dat')
 
                 if not os.path.exists(outfilename):
-                    tab = Table(data[filter].data)
-                    tab = make_table(tab)
+                    try:
+                        tab = Table(data[filter].data)
+                        tab = make_table(tab)
 
-                    if filter == 'F200W':
-                        try:
-                            wave_lim = np.max(Table(data[ext - 1].data)['wave'])
-                            tab = tab[tab['wave'] > wave_lim]
-                        except:
-                            pass
+                        if filter == 'F200W':
+                            try:
+                                wave_lim = np.max(Table(data[ext - 1].data)['wave'])
+                                tab = tab[tab['wave'] > wave_lim]
+                            except:
+                                pass
 
-                    # Write out the updated files.
-                    tab.write(outfilename, format='ascii.fixed_width_two_line', overwrite=True)
-                    print(f'Written {outfilename}')
+                        # Write out the updated files.
+                        tab.write(outfilename, format='ascii.fixed_width_two_line', overwrite=True)
+                        print(f'Written {outfilename}')
+                    except Exception as e:
+                        print(f'Skipping file {index + 1} because it ran into error {e}')
+                        continue
                 else:
                     print(f'It appears the .dat files were already created for this object/filter. Skipping this filter for this object.')
 
@@ -252,7 +256,7 @@ def make_1D_spectra_per_orientation(args):
                         t_out.write(outfilename_R, format='ascii.fixed_width_two_line', overwrite=True)
                         print(f'Written {outfilename_R}')
             except Exception as e:
-                print(f'Skipping object {objid} because it ran into error {e}'.)
+                print(f'Skipping object {objid} because it ran into error {e}')
                 continue
         else:
             print(f'It appears the R/C files were already created for this object. Skipping object {objid:05d}.')
