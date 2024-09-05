@@ -155,7 +155,7 @@ if __name__ == "__main__":
 
     # ---------check if region files exist. If not, run code to create necessary region files---------
     regionfiles = glob.glob(args.region_file_path + '*.reg')
-    if len(regionfiles) == 0:
+    if len(regionfiles) == 0 or args.clobber_region:
         print('\033[94m' + "No region files found, creating those for you now."  + '\033[0m')
         create_regions(parno, args)
     else:
