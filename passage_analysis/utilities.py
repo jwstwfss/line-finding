@@ -205,51 +205,55 @@ def make_1D_spectra_per_orientation(args):
 
     # ------looping over all beam files--------------
     for index, beam_filename in enumerate(beam_files):
-        print(f'\nDoing {index + 1} of {len(beam_files)} files..')
         objid = int(os.path.basename(beam_filename).split('_')[1].split('.')[0])
+        print(f'\nDoing object {objid} which is {index + 1} of {len(beam_files)} files..')
         outfile_thisobj = glob.glob(args.spectra_path + f'Par{args.parno}_{objid:05d}.*_1D_*.dat')
 
         if len(outfile_thisobj) == 0: # if no R/C file exists for this object id
-            z = speccat[speccat['id'] == objid]['redshift'].value[0]
+            try:
+                z = speccat[speccat['id'] == objid]['redshift'].value[0]
 
-            mb = multifit.MultiBeam(beam_filename, fcontam=0.1, sys_err=0.02, min_sens=0.05, MW_EBV=-1, group_name='', verbose=False)
+                mb = multifit.MultiBeam(beam_filename, fcontam=0.1, sys_err=0.02, min_sens=0.05, MW_EBV=-1, group_name='', verbose=False)
 
-            Cgrism_beams = [mb.beams[k] for k in range(len(mb.beams)) if mb.beams[k].grism.filter == 'GR150C']
-            Rgrism_beams = [mb.beams[k] for k in range(len(mb.beams)) if mb.beams[k].grism.filter == 'GR150R']
+                Cgrism_beams = [mb.beams[k] for k in range(len(mb.beams)) if mb.beams[k].grism.filter == 'GR150C']
+                Rgrism_beams = [mb.beams[k] for k in range(len(mb.beams)) if mb.beams[k].grism.filter == 'GR150R']
 
-            if len(Cgrism_beams) > 0:
-                mb_C = multifit.MultiBeam(beams=Cgrism_beams, fcontam=0.1, sys_err=0.02, min_sens=0.05, MW_EBV=-1, group_name='')
+                if len(Cgrism_beams) > 0:
+                    mb_C = multifit.MultiBeam(beams=Cgrism_beams, fcontam=0.1, sys_err=0.02, min_sens=0.05, MW_EBV=-1, group_name='')
 
-                # this catches cases where spectrum contains only zeros (very rare)
-                # The fit will crash in such cases
-                try:
-                    tfitC = mb_C.template_at_z(z, fitter='bounded')
-                    keys_C = mb_C.oned_spectrum(tfit=tfitC, bin=1).keys()
-                except:
-                    keys_C = mb_C.oned_spectrum(bin=1).keys()
+                    # this catches cases where spectrum contains only zeros (very rare)
+                    # The fit will crash in such cases
+                    try:
+                        tfitC = mb_C.template_at_z(z, fitter='bounded')
+                        keys_C = mb_C.oned_spectrum(tfit=tfitC, bin=1).keys()
+                    except:
+                        keys_C = mb_C.oned_spectrum(bin=1).keys()
 
-                for c in keys_C:
-                    t_out = make_table(mb_C.oned_spectrum(tfit=tfitC, bin=1)[c])
-                    outfilename_C = args.spectra_path + os.path.basename(beam_filename).replace('beams.fits', c + '_1D_C.dat')
-                    t_out.write(outfilename_C, format='ascii.fixed_width_two_line', overwrite=True)
-                    print(f'Written {outfilename_C}')
+                    for c in keys_C:
+                        t_out = make_table(mb_C.oned_spectrum(tfit=tfitC, bin=1)[c])
+                        outfilename_C = args.spectra_path + os.path.basename(beam_filename).replace('beams.fits', c + '_1D_C.dat')
+                        t_out.write(outfilename_C, format='ascii.fixed_width_two_line', overwrite=True)
+                        print(f'Written {outfilename_C}')
 
-            if len(Rgrism_beams) > 0:
-                mb_R = multifit.MultiBeam(beams=Rgrism_beams, fcontam=0.1, sys_err=0.02, min_sens=0.05, MW_EBV=-1, group_name='')
+                if len(Rgrism_beams) > 0:
+                    mb_R = multifit.MultiBeam(beams=Rgrism_beams, fcontam=0.1, sys_err=0.02, min_sens=0.05, MW_EBV=-1, group_name='')
 
-                # this catches cases where spectrum contains only zeros (very rare)
-                # The fit will crash in such cases
-                try:
-                    tfitR = mb_R.template_at_z(z, fitter='bounded')
-                    keys_R = mb_R.oned_spectrum(tfit=tfitR, bin=1).keys()
-                except:
-                    keys_R = mb_R.oned_spectrum(bin=1).keys()
+                    # this catches cases where spectrum contains only zeros (very rare)
+                    # The fit will crash in such cases
+                    try:
+                        tfitR = mb_R.template_at_z(z, fitter='bounded')
+                        keys_R = mb_R.oned_spectrum(tfit=tfitR, bin=1).keys()
+                    except:
+                        keys_R = mb_R.oned_spectrum(bin=1).keys()
 
-                for r in keys_R:
-                    t_out = make_table(mb_R.oned_spectrum(tfit=tfitR, bin=1)[r])
-                    outfilename_R = args.spectra_path + os.path.basename(beam_filename).replace('beams.fits', c + '_1D_R.dat')
-                    t_out.write(outfilename_R, format='ascii.fixed_width_two_line', overwrite=True)
-                    print(f'Written {outfilename_R}')
+                    for r in keys_R:
+                        t_out = make_table(mb_R.oned_spectrum(tfit=tfitR, bin=1)[r])
+                        outfilename_R = args.spectra_path + os.path.basename(beam_filename).replace('beams.fits', c + '_1D_R.dat')
+                        t_out.write(outfilename_R, format='ascii.fixed_width_two_line', overwrite=True)
+                        print(f'Written {outfilename_R}')
+            except Exception as e:
+                print(f'Skipping object {objid} because it ran into error {e}'.)
+                continue
         else:
             print(f'It appears the R/C files were already created for this object. Skipping object {objid:05d}.')
 
