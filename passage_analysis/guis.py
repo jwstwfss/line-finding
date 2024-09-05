@@ -121,7 +121,7 @@ def showDirect_PASSAGE(parno, path_to_drizzled_images='', path_to_region_files='
     ### KVN's quick fix to images having different names in different fields
     # specify the images to be displayed in DS9
     grism_file = glob(path_to_drizzled_images + '*gr150*_drz_sci.fits')
-    grism_file_ext = grism_file[0].split('_')[1]
+    grism_file_ext = os.path.basename(grism_file[0]).split('_')[1] # AA 2024/09/05: modified to include os.path.basename()
 
 
     # specify the images to be displayed in DS9
@@ -142,6 +142,8 @@ def showDirect_PASSAGE(parno, path_to_drizzled_images='', path_to_region_files='
             f"Par{parno}_{grism_file_ext}_f200w-gr150r_drz_sci.fits",
         ],
     }
+
+    print(f'\nDeb guis.py 146: parno={parno}, grism_file_ext={grism_file_ext}, images dict={images}') ##
 
     image_paths = {}
     for filter_name, filenames in images.items():
@@ -394,6 +396,7 @@ def show2dNEW(grism, parno, obid, zeroarr, user, trans, args, zran1=None, zran2=
     workingdir = os.getcwd()
 
     path2d = args.spec2D_path + f'Par{parno}_{obid:05d}.2D.fits'
+    print(f'\nDeb guis.py 397: obid={obid:05d}, path2d={path2d}') ##
 
     pix_per_um = 1 / (1e-4 * 46.934)  # GR150R 47.015 for GR150C
 
@@ -402,19 +405,19 @@ def show2dNEW(grism, parno, obid, zeroarr, user, trans, args, zran1=None, zran2=
     if grism == "F200W":
         frameno = "3"
         maglimit = 26.0
-        input_grism = (args.drizzled_images_path + f'Par{parno}_f200w-gr150r_drz_sci.fits')
+        input_grism = glob(args.drizzled_images_path + f'Par{parno}_*f200w-gr150r_drz_sci.fits')[0]
         zp_offset = -210
         obj_offset = (147 + 0.238 * pix_per_um + tweak)  # First number is pixels to blue edge (poorly defined). Second num is wave distance to center in um.
     elif grism == "F150W":
         frameno = "2"
         maglimit = 24.5
-        input_grism = (args.drizzled_images_path + f'Par{parno}_f150w-gr150r_drz_sci.fits')
+        input_grism = glob(args.drizzled_images_path + f'Par{parno}_*f150w-gr150r_drz_sci.fits')[0]
         zp_offset = -219 + tweak_zp
         obj_offset = 55 + 0.171 * pix_per_um + tweak
     elif grism == "F115W":
         frameno = "1"
         maglimit = 23.5
-        input_grism = (args.drizzled_images_path + f'Par{parno}_f115w-gr150r_drz_sci.fits')
+        input_grism = glob(args.drizzled_images_path + f'Par{parno}_*f115w-gr150r_drz_sci.fits')[0]
         zp_offset = -225.5 + tweak_zp
         obj_offset = -6 + 0.135 * pix_per_um + tweak
 
@@ -438,6 +441,8 @@ def show2dNEW(grism, parno, obid, zeroarr, user, trans, args, zran1=None, zran2=
         for tracker in doug:
             if grism == infits[tracker].header["EXTVER"]:
                 extension_check = 1
+
+    print(f'\nDeb guis.py 445: parno={parno}, extension_check={extension_check}, input_direct={input_direct}, input_grism={input_grism}') ##
 
     if extension_check:
         cutout_index = infits.index_of(("SCI", grism))
@@ -521,7 +526,7 @@ def show2dNEW(grism, parno, obid, zeroarr, user, trans, args, zran1=None, zran2=
     #    cy = (cy - hdr['CRPIX2'])*hdr['CDELT2'] + hdr['CRVAL2']
     #    rad = 5 * hdr['CD1_1']
 
-    outcoo = (args.spec1D_file_path + "temp_zero_coords_%s_" % user + str(frameno) + ".reg")
+    outcoo = (args.spec1D_path + "temp_zero_coords_%s_" % user + str(frameno) + ".reg")
 
     if os.path.exists(outcoo):
         os.unlink(outcoo)

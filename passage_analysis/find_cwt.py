@@ -163,7 +163,7 @@ def loop_field_cwt(parno, args):
 
     # -------displaying/creating relevant paths----------------
     print(f'\nSearching for default.config at: {args.code_dir}')
-    print(f'\nLooking for grism spectra files in {args.spectra_path}...')
+    print(f'\nSearching for grism spectra files in {args.spectra_path}')
 
     print(f'\nSearching for catalogs at: {args.photcat_file_path}')
     catalogs = glob(args.photcat_file_path + f'Par{parno}_phot*.fits') # get list of available catalogs

@@ -1106,7 +1106,7 @@ def inspect_object(
     panDispersed_PASSAGE(obj, parno=par, path_to_drizzled_images=args.drizzled_images_path, path_to_region_files=args.region_file_path)
 
     # start with a fresh set of config pars
-    config_pars = read_config(path_to_code+"/default.config", availgrism=availgrism)
+    config_pars = read_config(args.code_dir+"/default.config", availgrism=availgrism)
 
     # Data have been successfully loaded for this object. If it has been inspected
     # previously, the original results will have been stored in the SQLLite database
@@ -1195,7 +1195,7 @@ def inspect_object(
     if rejectPrevFit:
         print(" ")
         print_prompt("=" * 72)
-        print_prompt("Par%i Obj %i:" % (par, obj))
+        print_prompt(f"Par{par} Obj {obj}:") # AA modified on 2024/09/05
         print_prompt("Initial redshift guess: z = %f" % (zguess))
         print_prompt(
             "\nWhat would you like to do with this object?\nSee the README for options, or type 'h' to print them all to the screen."
@@ -2293,7 +2293,7 @@ def measure_z_interactive(parno, args, linelistfile=None):
 
     llin = asciitable.read(linelistfile, names=["parnos", "grism", "objid", "wavelen", "npix", "ston"])
 
-    parnos = llin["parnos"]
+    #parnos = llin["parnos"] # commented out by AA 2024/09/05 because no longer used
     grism = llin["grism"]
     objid = llin["objid"]
     wavelen = llin["wavelen"]
@@ -2301,7 +2301,7 @@ def measure_z_interactive(parno, args, linelistfile=None):
     ston = llin["ston"]
     objid_unique = np.unique(objid)
     #par = parnos[0]  # MDR 2022/05/17
-    par = parno # KVN 2024/07/31
+    #par = parno # KVN 2024/07/31 # commented out by AA 2024/09/05 because no longer used
 
     #### STEP 2:  set user name and output directory #########################
     ###########################################################################
@@ -2366,7 +2366,7 @@ def measure_z_interactive(parno, args, linelistfile=None):
             # then reset the database tables.
             # All Par numbers in the putative line list file should be the same, so the zeroth
             # element corresponds to the current field ID.
-            # databaseManager = WDBM(dbFileNamePrefix=os.path.join(outdir,'Par{}'.format(parnos[0])))
+            # databaseManager = WDBM(dbFileNamePrefix=os.path.join(outdir,'Par{}'.format(parno)))
             # databaseManager.resetDatabaseTables()
         else:
             # an object may be written to the comment file before it has
@@ -2400,10 +2400,10 @@ def measure_z_interactive(parno, args, linelistfile=None):
 
     #     #### STEP 5:  Get zero and first order positions; unpack them ###########
     #     #########################################################################
-    #     g102zeroordreg = path_to_wisp_data + '/Par' + str(par) + '/DATA/DIRECT_GRISM/G102_0th.reg'
-    #     g102firstordreg = path_to_wisp_data + '/Par' + str(par) + '/DATA/DIRECT_GRISM/G102_1st.reg'
-    #     g141zeroordreg = path_to_wisp_data + '/Par' + str(par) + '/DATA/DIRECT_GRISM/G141_0th.reg'
-    #     g141firstordreg = path_to_wisp_data + '/Par' + str(par) + '/DATA/DIRECT_GRISM/G141_1st.reg'
+    #     g102zeroordreg = path_to_wisp_data + '/Par' + str(parno) + '/DATA/DIRECT_GRISM/G102_0th.reg'
+    #     g102firstordreg = path_to_wisp_data + '/Par' + str(parno) + '/DATA/DIRECT_GRISM/G102_1st.reg'
+    #     g141zeroordreg = path_to_wisp_data + '/Par' + str(parno) + '/DATA/DIRECT_GRISM/G141_0th.reg'
+    #     g141firstordreg = path_to_wisp_data + '/Par' + str(parno) + '/DATA/DIRECT_GRISM/G141_1st.reg'
 
     #### STEP 6:  Get object information from SExtractor catalog ############
     #########################################################################
@@ -2442,10 +2442,10 @@ def measure_z_interactive(parno, args, linelistfile=None):
     #### STEP 5 now comes after STEP 6...
     #### STEP 5:  Get zero and first order positions; unpack them ###########
     #########################################################################
-    # g102zeroordreg = path_to_wisp_data + '/Par' + str(par) + '/DATA/DIRECT_GRISM/G102_0th.reg'
-    # g102firstordreg = path_to_wisp_data + '/Par' + str(par) + '/DATA/DIRECT_GRISM/G102_1st.reg'
-    # g141zeroordreg = path_to_wisp_data + '/Par' + str(par) + '/DATA/DIRECT_GRISM/G141_0th.reg'
-    # g141firstordreg = path_to_wisp_data + '/Par' + str(par) + '/DATA/DIRECT_GRISM/G141_1st.reg'
+    # g102zeroordreg = path_to_wisp_data + '/Par' + str(parno) + '/DATA/DIRECT_GRISM/G102_0th.reg'
+    # g102firstordreg = path_to_wisp_data + '/Par' + str(parno) + '/DATA/DIRECT_GRISM/G102_1st.reg'
+    # g141zeroordreg = path_to_wisp_data + '/Par' + str(parno) + '/DATA/DIRECT_GRISM/G141_0th.reg'
+    # g141firstordreg = path_to_wisp_data + '/Par' + str(parno) + '/DATA/DIRECT_GRISM/G141_1st.reg'
 
     g102zeroordreg = secats
     g141zeroordreg = secats
@@ -2490,7 +2490,7 @@ def measure_z_interactive(parno, args, linelistfile=None):
         g102zeroarr = getzeroorders_from_cat(g102zeroordreg[0], g="G102")
         show2dNEW(
             "F115W",
-            parnos[0],
+            parno,
             objid_unique[0],
             g102zeroarr,
             user,
@@ -2503,7 +2503,7 @@ def measure_z_interactive(parno, args, linelistfile=None):
         g141zeroarr = getzeroorders_from_cat(g141zeroordreg[0], g="G102")
         show2dNEW(
             "F150W",
-            parnos[0],
+            parno,
             objid_unique[0],
             g141zeroarr,
             user,
@@ -2516,7 +2516,7 @@ def measure_z_interactive(parno, args, linelistfile=None):
         f200zeroarr = getzeroorders_from_cat(f200zeroordreg[0], g="G102")
         show2dNEW(
             "F200W",
-            parnos[0],
+            parno,
             objid_unique[0],
             f200zeroarr,
             user,
@@ -2527,10 +2527,10 @@ def measure_z_interactive(parno, args, linelistfile=None):
         f200firstarr = None
 
     # tbaines: show direct images of PASSAGE data
-    showDirect_PASSAGE(parno=parnos[0], path_to_drizzled_images=args.drizzled_images_path, path_to_region_files=args.region_file_path)
+    showDirect_PASSAGE(parno=parno, path_to_drizzled_images=args.drizzled_images_path, path_to_region_files=args.region_file_path)
 
     #     if show_dispersed:  # MB
-    #         showDispersed(objid_unique[0], parnos[0], load_image=True, path_to_data  = path_to_data)
+    #         showDispersed(objid_unique[0], parno, load_image=True, path_to_data  = path_to_data)
 
     #### STEP 8:  Loop through objects ############
     #########################################################################
@@ -2617,10 +2617,10 @@ def measure_z_interactive(parno, args, linelistfile=None):
         ston_found = ston[wlinelist]
         wcatalog = np.where(objtable["obj"] == next_obj)
         objinfo = objtable[wcatalog]
-        # inspect_object(user, parnos[0], next_obj, objinfo, lamlines_found,
+        # inspect_object(user, parno, next_obj, objinfo, lamlines_found,
         #               ston_found, g102zeroarr, g141zeroarr, linelistoutfile,
         #               commentsfile, remaining_objects, allobjects, args,
-        #               show_dispersed=show_dispersed)
+        #               show_dispersed=args.show_dispersed)
 
         if use_stored_fits == True:
             ### get pickle files:
@@ -2628,23 +2628,23 @@ def measure_z_interactive(parno, args, linelistfile=None):
             path_pickle1 = (
                 args.stored_fits_path
                 + "/Par"
-                + str(parnos[0])
+                + str(parno)
                 + "_output_a/fitdata/Par0_"
                 + str(next_obj)
                 + "_fitspec.pickle"
             )
-            # path_pickle1 = path_to_stored_fits + '/Par'  + str(parnos[0]) + '_output_mbagley/fitdata/Par' + str(parnos[0]) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
-            # path_pickle2 = path_to_stored_fits + '/Par'  + str(parnos[0]) +    '_output_marc/fitdata/Par' + str(parnos[0]) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
-            # path_pickle3 = path_to_stored_fits + '/Par'  + str(parnos[0]) + '_output_ben/fitdata/Par' + str(parnos[0]) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
-            # path_pickle4 = path_to_stored_fits + '/Par'  + str(parnos[0]) +     '_output_claudia/fitdata/Par' + str(parnos[0]) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
-            # path_pickle5 = path_to_stored_fits + '/Par'  + str(parnos[0]) +  '_output_vihang/fitdata/Par' + str(parnos[0]) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
-            # path_pickle6 = path_to_stored_fits + '/Par'  + str(parnos[0]) +  '_output_ivano/fitdata/Par' + str(parnos[0]) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
-            # path_pickle7 = path_to_stored_fits + '/Par'  + str(parnos[0]) +  '_output_mbeck/fitdata/Par' + str(parnos[0]) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
-            # path_pickle8 = path_to_stored_fits + '/Par'  + str(parnos[0]) +  '_output_karlenoid/fitdata/Par' + str(parnos[0]) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
-            # path_pickle9 = path_to_stored_fits + '/Par'  + str(parnos[0]) +  '_output_mjr/fitdata/Par' + str(parnos[0]) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
-            # path_pickle10 = path_to_stored_fits + '/Par'  + str(parnos[0]) + '_output_sophia/fitdata/Par' + str(parnos[0]) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
-            # path_pickle11 = '/Volumes/Thunderbay/wisps/mzr_refit/Par'  + str(parnos[0]) + '_output_marc-mzr/fitdata/Par' + str(parnos[0]) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
-            # path_pickle12 = '/Volumes/Thunderbay/wisps/mzr_refit/Par'  + str(parnos[0]) + '_output_alaina-mzr/fitdata/Par' + str(parnos[0]) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
+            # path_pickle1 = path_to_stored_fits + '/Par'  + str(parno) + '_output_mbagley/fitdata/Par' + str(parno) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
+            # path_pickle2 = path_to_stored_fits + '/Par'  + str(parno) +    '_output_marc/fitdata/Par' + str(parno) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
+            # path_pickle3 = path_to_stored_fits + '/Par'  + str(parno) + '_output_ben/fitdata/Par' + str(parno) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
+            # path_pickle4 = path_to_stored_fits + '/Par'  + str(parno) +     '_output_claudia/fitdata/Par' + str(parno) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
+            # path_pickle5 = path_to_stored_fits + '/Par'  + str(parno) +  '_output_vihang/fitdata/Par' + str(parno) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
+            # path_pickle6 = path_to_stored_fits + '/Par'  + str(parno) +  '_output_ivano/fitdata/Par' + str(parno) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
+            # path_pickle7 = path_to_stored_fits + '/Par'  + str(parno) +  '_output_mbeck/fitdata/Par' + str(parno) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
+            # path_pickle8 = path_to_stored_fits + '/Par'  + str(parno) +  '_output_karlenoid/fitdata/Par' + str(parno) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
+            # path_pickle9 = path_to_stored_fits + '/Par'  + str(parno) +  '_output_mjr/fitdata/Par' + str(parno) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
+            # path_pickle10 = path_to_stored_fits + '/Par'  + str(parno) + '_output_sophia/fitdata/Par' + str(parno) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
+            # path_pickle11 = '/Volumes/Thunderbay/wisps/mzr_refit/Par'  + str(parno) + '_output_marc-mzr/fitdata/Par' + str(parno) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
+            # path_pickle12 = '/Volumes/Thunderbay/wisps/mzr_refit/Par'  + str(parno) + '_output_alaina-mzr/fitdata/Par' + str(parno) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
 
             ### put new fits first
             # if os.path.exists(path_pickle11):
@@ -2678,7 +2678,7 @@ def measure_z_interactive(parno, args, linelistfile=None):
         if use_stored_fits == True:
             inspect_object(
                 user,
-                parnos[0],
+                parno,
                 next_obj,
                 objinfo,
                 lamlines_found,
@@ -2689,13 +2689,13 @@ def measure_z_interactive(parno, args, linelistfile=None):
                 commentsfile,
                 remaining_objects,
                 allobjects, args, 
-                show_dispersed=show_dispersed,
+                show_dispersed=args.show_dispersed,
                 stored_fits=inpickles,
                 )
         else:
             inspect_object(
                 user,
-                parnos[0],
+                parno,
                 next_obj,
                 objinfo,
                 lamlines_found,
@@ -2706,13 +2706,13 @@ def measure_z_interactive(parno, args, linelistfile=None):
                 commentsfile,
                 remaining_objects,
                 allobjects, args,
-                show_dispersed=show_dispersed,
+                show_dispersed=args.show_dispersed,
                 stored_fits=False,
                 )
-            # if len(glob.glob(path_to_wisp_data +'Par'+ str(parnos[0])+ '/Spectra/Par' +str(parnos[0])+ '_' + str(next_obj).zfill(5)+'*_R.dat')) > 0:
+            # if len(glob.glob(path_to_wisp_data +'Par'+ str(parno)+ '/Spectra/Par' +str(parno)+ '_' + str(next_obj).zfill(5)+'*_R.dat')) > 0:
             #     inspect_object(
             #         user,
-            #         parnos[0],
+            #         parno,
             #         next_obj,
             #         objinfo,
             #         lamlines_found,
@@ -2723,13 +2723,13 @@ def measure_z_interactive(parno, args, linelistfile=None):
             #         commentsfile,
             #         remaining_objects,
             #         allobjects, args,
-            #         show_dispersed=show_dispersed,
+            #         show_dispersed=args.show_dispersed,
             #         stored_fits=False,
             #         path_to_wisp_data=path_to_wisp_data, orientation='R')
-            # if len(glob.glob(path_to_wisp_data +'Par'+ str(parnos[0])+ '/Spectra/Par' +str(parnos[0])+ '_' + str(next_obj).zfill(5)+'*_C.dat'))> 0:
+            # if len(glob.glob(path_to_wisp_data +'Par'+ str(parno)+ '/Spectra/Par' +str(parno)+ '_' + str(next_obj).zfill(5)+'*_C.dat'))> 0:
             #     inspect_object(
             #         user,
-            #         parnos[0],
+            #         parno,
             #         next_obj,
             #         objinfo,
             #         lamlines_found,
@@ -2740,7 +2740,7 @@ def measure_z_interactive(parno, args, linelistfile=None):
             #         commentsfile,
             #         remaining_objects,
             #         allobjects, args,
-            #         show_dispersed=show_dispersed,
+            #         show_dispersed=args.show_dispersed,
             #         stored_fits=False,
             #         path_to_wisp_data=path_to_wisp_data, orientation='C')
                 
@@ -2777,19 +2777,19 @@ def measure_z_interactive(parno, args, linelistfile=None):
                     if use_stored_fits == True:
                         ### get pickle files:
                         inpickles = []
-                        path_pickle1 = (args.stored_fits_path + f'/Par{parnos[0]}_output_a/fitdata/Par0_{next_obj}_fitspec.pickle')
-                        # path_pickle1 = path_to_stored_fits + '/Par'  + str(parnos[0]) + '_output_mbagley/fitdata/Par' + str(parnos[0]) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
-                        # path_pickle2 = path_to_stored_fits + '/Par'  + str(parnos[0]) +    '_output_marc/fitdata/Par' + str(parnos[0]) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
-                        # path_pickle3 = path_to_stored_fits + '/Par'  + str(parnos[0]) + '_output_claudia/fitdata/Par' + str(parnos[0]) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
-                        # path_pickle4 = path_to_stored_fits + '/Par'  + str(parnos[0]) +     '_output_ben/fitdata/Par' + str(parnos[0]) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
-                        # path_pickle5 = path_to_stored_fits + '/Par'  + str(parnos[0]) +  '_output_vihang/fitdata/Par' + str(parnos[0]) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
-                        # path_pickle6 = path_to_stored_fits + '/Par'  + str(parnos[0]) +  '_output_ivano/fitdata/Par' + str(parnos[0]) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
-                        # path_pickle7 = path_to_stored_fits + '/Par'  + str(parnos[0]) +  '_output_mbeck/fitdata/Par' + str(parnos[0]) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
-                        # path_pickle8 = path_to_stored_fits + '/Par'  + str(parnos[0]) +  '_output_karlenoid/fitdata/Par' + str(parnos[0]) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
-                        # path_pickle9 = path_to_stored_fits + '/Par'  + str(parnos[0]) +  '_output_mjr/fitdata/Par' + str(parnos[0]) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
-                        # path_pickle10 = path_to_stored_fits + '/Par'  + str(parnos[0]) + '_output_sophia/fitdata/Par' + str(parnos[0]) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
-                        # path_pickle11 = '/Volumes/Thunderbay/wisps/mzr_refit/Par'  + str(parnos[0]) + '_output_marc-mzr/fitdata/Par' + str(parnos[0]) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
-                        # path_pickle12 = '/Volumes/Thunderbay/wisps/mzr_refit/Par'  + str(parnos[0]) + '_output_alaina-mzr/fitdata/Par' + str(parnos[0]) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
+                        path_pickle1 = (args.stored_fits_path + f'/Par{parno}_output_a/fitdata/Par0_{next_obj}_fitspec.pickle')
+                        # path_pickle1 = path_to_stored_fits + '/Par'  + str(parno) + '_output_mbagley/fitdata/Par' + str(parno) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
+                        # path_pickle2 = path_to_stored_fits + '/Par'  + str(parno) +    '_output_marc/fitdata/Par' + str(parno) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
+                        # path_pickle3 = path_to_stored_fits + '/Par'  + str(parno) + '_output_claudia/fitdata/Par' + str(parno) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
+                        # path_pickle4 = path_to_stored_fits + '/Par'  + str(parno) +     '_output_ben/fitdata/Par' + str(parno) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
+                        # path_pickle5 = path_to_stored_fits + '/Par'  + str(parno) +  '_output_vihang/fitdata/Par' + str(parno) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
+                        # path_pickle6 = path_to_stored_fits + '/Par'  + str(parno) +  '_output_ivano/fitdata/Par' + str(parno) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
+                        # path_pickle7 = path_to_stored_fits + '/Par'  + str(parno) +  '_output_mbeck/fitdata/Par' + str(parno) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
+                        # path_pickle8 = path_to_stored_fits + '/Par'  + str(parno) +  '_output_karlenoid/fitdata/Par' + str(parno) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
+                        # path_pickle9 = path_to_stored_fits + '/Par'  + str(parno) +  '_output_mjr/fitdata/Par' + str(parno) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
+                        # path_pickle10 = path_to_stored_fits + '/Par'  + str(parno) + '_output_sophia/fitdata/Par' + str(parno) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
+                        # path_pickle11 = '/Volumes/Thunderbay/wisps/mzr_refit/Par'  + str(parno) + '_output_marc-mzr/fitdata/Par' + str(parno) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
+                        # path_pickle12 = '/Volumes/Thunderbay/wisps/mzr_refit/Par'  + str(parno) + '_output_alaina-mzr/fitdata/Par' + str(parno) + '_BEAM_' + str(next_obj) + '_fitspec.pickle'
 
                         ### put new fits first
                         # if os.path.exists(path_pickle11):
@@ -2823,7 +2823,7 @@ def measure_z_interactive(parno, args, linelistfile=None):
                     if use_stored_fits == True:
                         inspect_object(
                             user,
-                            parnos[0],
+                            parno,
                             next_obj,
                             objinfo,
                             lamlines_found,
@@ -2834,13 +2834,13 @@ def measure_z_interactive(parno, args, linelistfile=None):
                             commentsfile,
                             remaining_objects,
                             allobjects, args,
-                            show_dispersed=show_dispersed,
+                            show_dispersed=args.show_dispersed,
                             stored_fits=inpickles,
                             )
                     else:
                         inspect_object(
                             user,
-                            parnos[0],
+                            parno,
                             next_obj,
                             objinfo,
                             lamlines_found,
@@ -2851,13 +2851,13 @@ def measure_z_interactive(parno, args, linelistfile=None):
                             commentsfile,
                             remaining_objects,
                             allobjects, args,
-                            show_dispersed=show_dispersed,
+                            show_dispersed=args.show_dispersed,
                             stored_fits=False,
                             )
-                        if len(glob.glob(args.spectra_path + f'Par{parnos[0]}_{next_obj:05d}*_R.dat')) > 0:
+                        if len(glob.glob(args.spectra_path + f'Par{parno}_{next_obj:05d}*_R.dat')) > 0:
                             inspect_object(
                                 user,
-                                parnos[0],
+                                parno,
                                 next_obj,
                                 objinfo,
                                 lamlines_found,
@@ -2868,13 +2868,13 @@ def measure_z_interactive(parno, args, linelistfile=None):
                                 commentsfile,
                                 remaining_objects,
                                 allobjects, args,
-                                show_dispersed=show_dispersed,
+                                show_dispersed=args.show_dispersed,
                                 stored_fits=False,
                                 orientation='R')
-                        if len(glob.glob(args.spectra_path + f'Par{parnos[0]}_{next_obj:05d}*_C.dat'))> 0:
+                        if len(glob.glob(args.spectra_path + f'Par{parno}_{next_obj:05d}*_C.dat'))> 0:
                             inspect_object(
                                 user,
-                                parnos[0],
+                                parno,
                                 next_obj,
                                 objinfo,
                                 lamlines_found,
@@ -2885,7 +2885,7 @@ def measure_z_interactive(parno, args, linelistfile=None):
                                 commentsfile,
                                 remaining_objects,
                                 allobjects, args,
-                                show_dispersed=show_dispersed,
+                                show_dispersed=args.show_dispersed,
                                 stored_fits=False,
                                 orientation='C')
 
@@ -3692,7 +3692,7 @@ def UpdateCatalog(linelistoutfile):
         alldata = pickle.load(fileObject)
         # definition from above
         #                      0          1                 2      3        4           5            6         7         8           9         10
-        # output_meta_data = [parnos[0], objid_unique[i], ra_obj, dec_obj, a_image_obj, b_image_obj, jmag_obj, hmag_obj, fitresults, flagcont, config_pars]
+        # output_meta_data = [parno, objid_unique[i], ra_obj, dec_obj, a_image_obj, b_image_obj, jmag_obj, hmag_obj, fitresults, flagcont, config_pars]
         parnos = alldata[0]
         objid_unique = alldata[1]
         ra_obj = alldata[2]

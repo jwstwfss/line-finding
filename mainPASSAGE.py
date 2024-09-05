@@ -17,7 +17,9 @@ except:
 import os
 import re
 import glob
-import sys, argparse
+import sys
+import argparse
+import subprocess
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -112,6 +114,14 @@ def substitute_fieldname_in_paths(args, field, placeholder='FIELD'):
 
     return args
 
+# ------------------------------------------------------------------------------------------------------
+def close(procs):
+    '''
+    Tiny function to close any process opened by subprocess (in this case, the ds9 windows) given a list of process
+    By AA; Sep 2024
+    '''
+    for proc in procs: proc.terminate()
+
 # -------------------------------------------------------------------------------------------------------
 if __name__ == "__main__":
     # -----------------------------Take field name from user input--------------------------------------
@@ -175,8 +185,11 @@ if __name__ == "__main__":
         print(f'\nFound linelist file in {args.linelist_path}, so proceeding to the next step. If you want to re-make the linelist file please rerun mainPASSAGE.py with --clobber_linelist option.')
 
     # -----------------------------Open two ds9 windows--------------------------------------
-    os.system('/Applications/SAOImageDS9.app/Contents/MacOS/ds9 -title PASSAGE_DIRECT &')
-    os.system('/Applications/SAOImageDS9.app/Contents/MacOS/ds9 -title PASSAGE_spec2D &')
+    #os.system('/Applications/SAOImageDS9.app/Contents/MacOS/ds9 -title PASSAGE_DIRECT &')
+    #os.system('/Applications/SAOImageDS9.app/Contents/MacOS/ds9 -title PASSAGE_spec2D &')
+    ds9_direct = subprocess.Popen(['/Applications/SAOImageDS9.app/Contents/MacOS/ds9', '-title', 'PASSAGE_DIRECT'])
+    ds9_2d = subprocess.Popen(['/Applications/SAOImageDS9.app/Contents/MacOS/ds9', '-title', 'PASSAGE_spec2D'])
+    ds9 = [ds9_direct, ds9_2d] # accumulating process IDs in a list, so that we can close ALL if needed (just do 'close(ds9)' on terminal)
 
     # -----------run the measure_z_interactive codes-------------------
     args.show_dispersed = True
