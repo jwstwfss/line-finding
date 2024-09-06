@@ -5,7 +5,8 @@
     Modified: Ayan Acharyya
     Last modified: 3 September 2024
     Examples: run mainPASSAGE.py --user ayan_gdrive
-             run mainPASSAGE.py --verbose
+              run mainPASSAGE.py --verbose
+              run mainPASSAGE.py --user ayan_hd --prep_only allfields
 '''
 
 try:
@@ -20,9 +21,7 @@ import glob
 import sys
 import argparse
 import subprocess
-
-import warnings
-warnings.filterwarnings('ignore')
+from datetime import datetime, timedelta
 
 # --------------------------------------------------------------------------------------------------------------------
 def parse_args():
@@ -32,12 +31,13 @@ def parse_args():
     '''
 
     parser = argparse.ArgumentParser(description='Produces emission line maps for JWST-PASSAGE data.')
-    parser.add_argument('--user', metavar='user', type=str, action='store', default='knedkova', help='Which user template to follow for directory structures?')
+    parser.add_argument('--user', metavar='user', type=str, action='store', default='knedkova', help='Which user template to follow for directory structures? Default is knedkova')
     parser.add_argument('--verbose', dest='verbose', action='store_true', default=False, help='Maximise prints to screen? Default is no.')
     parser.add_argument('--clobber_region', dest='clobber_region', action='store_true', default=False, help='Re-make *.reg files? Default is no.')
     parser.add_argument('--clobber_1D', dest='clobber_1D', action='store_true', default=False, help='Make *1D.dat outputs? Default is no.')
     parser.add_argument('--clobber_RC', dest='clobber_RC', action='store_true', default=False, help='Make *_R.fits and *_C.fits outputs? Default is no.')
     parser.add_argument('--clobber_linelist', dest='clobber_linelist', action='store_true', default=False, help='Re-make linelist file? Default is no.')
+    parser.add_argument('--prep_only', metavar='prep_only', type=str, action='store', default=None, help='If a PASSAGE field ID/IDs (only IDs, without "Par") is/are specified, this will only run all steps leading to the interactive part, but not trigger the interactive part? Default is None')
     args = parser.parse_args()
 
     return args
@@ -124,80 +124,104 @@ def close(procs):
 
 # -------------------------------------------------------------------------------------------------------
 if __name__ == "__main__":
-    # -----------------------------Take field name from user input--------------------------------------
-    parno = input('\033[94m' + "Enter the number of the parallel field you want to analyze.\n> " + '\033[0m')
-    # pull out only the number, in case the user entered e.g. "Par1"
-    while True:
-        try:
-            parno = int(re.findall(r'\d+', str(parno))[0])
-        except:
-            parno = input(
-                '\033[94m' + "A parallel field number is required. Enter the number of the parallel field you want to analyze.\n> " + '\033[0m')
-            continue
-        else:
-            break
 
     # -----get user name and other user args------
     args = parse_args()
-
-    # -----get associated directory structure and appropriate parno------
     args = get_user_directory_structure(args)
-    if args.is_fieldname_padded: parno = f'{parno:03}' # pad field name if needed
-    args.parno = parno
-    args = substitute_fieldname_in_paths(args, parno) # convert pseudo paths to proper paths
 
-    # -----import passage_analysis if not successful earlier------
-    if 'passage' not in locals():
-        sys.path.insert(1, args.code_dir)
-        import passage_analysis as passage
-        from passage_analysis.utilities import *
-        print('passage_analysis now successfully imported.')
-
-    # ---------check if region files exist. If not, run code to create necessary region files---------
-    regionfiles = glob.glob(args.region_file_path + '*.reg')
-    if len(regionfiles) == 0 or args.clobber_region:
-        print('\033[94m' + "No region files found, creating those for you now."  + '\033[0m')
-        create_regions(parno, args)
+    # -----check if supposed to only do the preparatory part------
+    if args.prep_only is None:
+        # -----------------------------Take field name from user input--------------------------------------
+        parno = input('\033[94m' + "Enter the number of the parallel field you want to analyze.\n> " + '\033[0m')
+        # pull out only the number, in case the user entered e.g. "Par1"
+        while True:
+            try:
+                parno = int(re.findall(r'\d+', str(parno))[0])
+            except:
+                parno = input(
+                    '\033[94m' + "A parallel field number is required. Enter the number of the parallel field you want to analyze.\n> " + '\033[0m')
+                continue
+            else:
+                break
+        parno_arr = [parno]
     else:
-        print(f'\nFound some region files in {args.region_file_path}, so proceeding to the next step. If you want to re-make the region files please rerun mainPASSAGE.py with --clobber_region option.')
+        print(f'\nDoing ONLY PREPARATORY steps for the fields designed via the --prep_only option, hence NOT accepting user input for parno.')
+        if 'all' in args.prep_only:
+            parno_arr = [int(os.path.split(item[:-1])[1][3:]) for item in glob.glob(args.data_dir + 'Par*/')]
+            parno_arr.sort()
+        else:
+            parno_arr = [int(item) for item in args.prep_only.split(',')]
 
-    # ---------check if headers for 2D spectra need to be updated, and update if necessary-----------
-    if fits_headers_need_updating(args.spec2D_path):
-        update_fits_headers(args.spec2D_path)
+    # -----looping over all proivided field names, if prep_only-------------
+    # -----loop runs exactly once, if NOT prep_only, so it is ok-------------
+    for index, parno in enumerate(parno_arr):
+        start_time = datetime.now()
+        if args.prep_only is not None: print(f'\nDoing Par{parno} which is {index + 1} of {len(parno_arr)} fields..') # display current field being done, only for prep_only scenario
 
-    # ---------check if .dat spectra files exist. If not, make them------------------
-    spec_files = sorted(glob.glob(args.spectra_path + '*1D.dat'))
-    if len(spec_files) == 0 or args.clobber_1D:
-        convert_1Dspectra_fits_to_dat(args)
+        # -----get associated directory structure and appropriate parno------
+        args = get_user_directory_structure(args) # this needs to be repeated for every iteration on a new field
+        if args.is_fieldname_padded: parno = f'{parno:03}' # pad field name if needed
+        args.parno = parno
+        args = substitute_fieldname_in_paths(args, parno) # convert pseudo paths to proper paths
+
+        # -----import passage_analysis if not successful earlier------
+        if 'passage' not in locals():
+            sys.path.insert(1, args.code_dir)
+            import passage_analysis as passage
+            from passage_analysis.utilities import *
+            print('passage_analysis now successfully imported.')
+
+        # ---------check if region files exist. If not, run code to create necessary region files---------
+        regionfiles = glob.glob(args.region_file_path + '*.reg')
+        if len(regionfiles) == 0 or args.clobber_region:
+            print('\033[94m' + "No region files found, creating those for you now."  + '\033[0m')
+            create_regions(parno, args)
+        else:
+            print(f'\nFound some region files in {args.region_file_path}, so proceeding to the next step. If you want to re-make the region files please rerun mainPASSAGE.py with --clobber_region option.')
+
+        # ---------check if headers for 2D spectra need to be updated, and update if necessary-----------
+        if fits_headers_need_updating(args.spec2D_path):
+            update_fits_headers(args.spec2D_path)
+
+        # ---------check if .dat spectra files exist. If not, make them------------------
+        spec_files = sorted(glob.glob(args.spectra_path + '*1D.dat'))
+        if len(spec_files) == 0 or args.clobber_1D:
+            convert_1Dspectra_fits_to_dat(args)
+        else:
+            print(f'\nFound 1D.dat files in {args.spectra_path}, so proceeding to the next step. If you want make *1D.dat files please rerun mainPASSAGE.py with --clobber_1D option.')
+
+        # ---------check if R and C spectra files exist. If not, make them------------------
+        C_files = sorted(glob.glob(args.spectra_path + '*C.dat'))
+        R_files = sorted(glob.glob(args.spectra_path + '*R.dat'))
+        if (len(C_files) == 0 and len(R_files) == 0) or args.clobber_RC:
+            make_1D_spectra_per_orientation(args)
+        else:
+            print(f'\nFound R & C files in {args.spectra_path}, so proceeding to the next step. If you want to make *_R/C.fits files please rerun mainPASSAGE.py with --clobber_RC option.')
+
+        # -------check if line list exists. If not, run code to create the linelist------------
+        linelist_file = args.linelist_path + 'Par'+str(parno)+'lines.dat'
+        if not os.path.exists(linelist_file):
+            print('\033[94m' + "No line list file found, creating the line list for you now." + '\033[0m')
+            passage.loop_field_cwt(parno, args)
+        else:
+            print(f'\nFound linelist file in {args.linelist_path}, so proceeding to the next step. If you want to re-make the linelist file please rerun mainPASSAGE.py with --clobber_linelist option.')
+
+        print(f'Prep for Par{parno} completed in {timedelta(seconds=(datetime.now() - start_time).seconds)}')
+
+    # -----check if supposed to only do the preparatory part------
+    if args.prep_only is not None:
+        print(f'Prep for all {len(parno_arr)} fields completed. Exiting now. Re-run mainPASSAGE.py without --prep_only option in order to continue to the interactive part.')
     else:
-        print(f'\nFound 1D.dat files in {args.spectra_path}, so proceeding to the next step. If you want make *1D.dat files please rerun mainPASSAGE.py with --clobber_1D option.')
+        # -----------------------------Open two ds9 windows--------------------------------------
+        #os.system('/Applications/SAOImageDS9.app/Contents/MacOS/ds9 -title PASSAGE_DIRECT &')
+        #os.system('/Applications/SAOImageDS9.app/Contents/MacOS/ds9 -title PASSAGE_spec2D &')
+        ds9_direct = subprocess.Popen(['/Applications/SAOImageDS9.app/Contents/MacOS/ds9', '-title', 'PASSAGE_DIRECT'])
+        ds9_2d = subprocess.Popen(['/Applications/SAOImageDS9.app/Contents/MacOS/ds9', '-title', 'PASSAGE_spec2D'])
+        ds9 = [ds9_direct, ds9_2d] # accumulating process IDs in a list, so that we can close ALL if needed (just do 'close(ds9)' on terminal)
 
-    # ---------check if R and C spectra files exist. If not, make them------------------
-    C_files = sorted(glob.glob(args.spectra_path + '*C.dat'))
-    R_files = sorted(glob.glob(args.spectra_path + '*R.dat'))
-    if (len(C_files) == 0 and len(R_files) == 0) or args.clobber_RC:
-        make_1D_spectra_per_orientation(args)
-    else:
-        print(f'\nFound R & C files in {args.spectra_path}, so proceeding to the next step. If you want to make *_R/C.fits files please rerun mainPASSAGE.py with --clobber_RC option.')
-
-    # -------check if line list exists. If not, run code to create the linelist------------
-    linelist_file = args.linelist_path + 'Par'+str(parno)+'lines.dat'
-    if not os.path.exists(linelist_file):
-        print('\033[94m' + "No line list file found, creating the line list for you now." + '\033[0m')
-        passage.loop_field_cwt(parno, args)
-    else:
-        print(f'\nFound linelist file in {args.linelist_path}, so proceeding to the next step. If you want to re-make the linelist file please rerun mainPASSAGE.py with --clobber_linelist option.')
-
-    # -----------------------------Open two ds9 windows--------------------------------------
-    #os.system('/Applications/SAOImageDS9.app/Contents/MacOS/ds9 -title PASSAGE_DIRECT &')
-    #os.system('/Applications/SAOImageDS9.app/Contents/MacOS/ds9 -title PASSAGE_spec2D &')
-    ds9_direct = subprocess.Popen(['/Applications/SAOImageDS9.app/Contents/MacOS/ds9', '-title', 'PASSAGE_DIRECT'])
-    ds9_2d = subprocess.Popen(['/Applications/SAOImageDS9.app/Contents/MacOS/ds9', '-title', 'PASSAGE_spec2D'])
-    ds9 = [ds9_direct, ds9_2d] # accumulating process IDs in a list, so that we can close ALL if needed (just do 'close(ds9)' on terminal)
-
-    # -----------run the measure_z_interactive codes-------------------
-    args.show_dispersed = True
-    args.print_colors = True
-    passage.measure_z_interactive(parno, args)
+        # -----------run the measure_z_interactive codes-------------------
+        args.show_dispersed = True
+        args.print_colors = True
+        passage.measure_z_interactive(parno, args)
 
 

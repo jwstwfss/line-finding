@@ -36,10 +36,18 @@ import distutils
 import numpy as np  # MDR 2022/05/17
 import fileinput
 import scipy
+
 #### Added by KVN: this changes the matplotlib backend
 import matplotlib
-matplotlib.use('TkAgg')
+## Modified by AA: to have a different backend for different users, because TKAgg does not work for all machines/OS
+users_who_need_qt = ['acharyya'] # simply add your username to this list if QT5Agg works for you; no action needed if TKAgg works for you
+HOME = os.getenv('HOME')
+
+if np.array([item in HOME for item in users_who_need_qt]).any(): matplotlib.use('QT5Agg')
+else: matplotlib.use('TkAgg')
+##
 ####
+
 import matplotlib.pylab as plt
 from scipy.interpolate import splrep as spline
 from astropy.table import Table
@@ -573,9 +581,7 @@ def plot_chooseSpec(spdata1, spdata2, spdata3, config_pars, plottitle, outdir, z
 
     # generate the plot grid.
     plt.ion()
-    print(f'\nDeb measure_z_interactive.py 576: reached till here; spdata1={len(spdata1)}, spdata2={len(spdata2)}, spdata3={len(spdata3)}') ##
     fig = plt.figure(1, figsize=(11, 12), dpi=75)
-    print(f'\nDeb measure_z_interactive.py 578: reached till here') ##
     plt.clf()
     # gs = gridspec.GridSpec(3, 4)
     gs = gridspec.GridSpec(3, 1)
@@ -3673,7 +3679,8 @@ def writeComments(filename, parnos, objid, comment):
     else:
         cat = open(filename, "a")
 
-    outstr = "{:<8d}".format(parnos) + "{:<6d}".format(objid) + comment + "\n"
+    try: outstr = "{:<8d}".format(parnos) + "{:<6d}".format(objid) + comment + "\n"
+    except: outstr = parnos + "\t\t" + "{:<6d}".format(objid) + comment + "\n" # AA added on 2024/09/06 to hadnle cases where the passed parno is a string rather than a number
 
     cat.write(outstr)
     cat.close()
