@@ -3,7 +3,7 @@
     Notes: Interactive emission line finding routine for PASSAGE fields
     Author : Kalina Nedkova
     Modified: Ayan Acharyya
-    Last modified: 3 September 2024
+    Last modified: September 2024
     Examples: run mainPASSAGE.py --user ayan_gdrive
               run mainPASSAGE.py --verbose
               run mainPASSAGE.py --user ayan_hd --prep_only allfields
