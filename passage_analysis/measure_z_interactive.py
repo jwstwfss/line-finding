@@ -589,10 +589,10 @@ def plot_chooseSpec(spdata1, spdata2, spdata3, config_pars, plottitle, outdir, z
     ax2 = fig.add_subplot(gs[1, 0])
     ax3 = fig.add_subplot(gs[2, 0])
 
-    xmin = np.ma.min(spec_lam1) - 10.0  # 200.0 - M.D.R. - 10/22/2020
-    xmax = np.ma.max(spec_lam1) + 10.0  # 200.0 - M.D.R. - 10/22/2020
-    ymin = -0.2 * np.ma.max(spec_val1)
-    ymax = 1.2 * np.ma.max(spec_val1)
+    xmin = np.nanmin(spec_lam1) - 10.0  # 200.0 - M.D.R. - 10/22/2020
+    xmax = np.nanmax(spec_lam1) + 10.0  # 200.0 - M.D.R. - 10/22/2020
+    ymin = -0.2 * np.nanmax(spec_val1) # AA modified all these to nanmin()/nanmax() on 2024-09-09
+    ymax = 1.2 * np.nanmax(spec_val1)
 
     # the line widths for the data and overlaid fit.
     lw_data = 2.0
@@ -681,7 +681,7 @@ def plot_object(zguess, zfit, spdata, config_pars, snr_meas_array, snr_tot_other
 
     # generate the plot grid.
     plt.ion()
-    fig = plt.figure(2, figsize=(11, 8), dpi=75)
+    fig = plt.figure(2, figsize=(11, 6), dpi=75)
     plt.clf()
     # gs = gridspec.GridSpec(3, 4)
     gs = gridspec.GridSpec(3, num_gridspec_plots + 1)
@@ -733,10 +733,10 @@ def plot_object(zguess, zfit, spdata, config_pars, snr_meas_array, snr_tot_other
     else:
         all_ax = [ax1, ax2]
 
-    xmin = np.ma.min(spec_lam) - 10.0  # 200.0 - M.D.R. - 10/22/2020
-    xmax = np.ma.max(spec_lam) + 10.0  # 200.0 - M.D.R. - 10/22/2020
-    ymin = -0.2 * np.ma.max(spec_val)
-    ymax = 1.2 * np.ma.max(spec_val)
+    xmin = np.nanmin(spec_lam) - 10.0  # 200.0 - M.D.R. - 10/22/2020
+    xmax = np.nanmax(spec_lam) + 10.0  # 200.0 - M.D.R. - 10/22/2020
+    ymin = -0.2 * np.nanmax(spec_val) # AA modified all these to nanmin()/nanmax() on 2024-09-09
+    ymax = 1.2 * np.nanmax(spec_val)
 
     # the line widths for the data and overlaid fit.
     lw_data = 2.0
@@ -1288,15 +1288,20 @@ def inspect_object(
         # Determine the largest extent of the object so broadening of the lines can be accounted for in the fitting. MDR 2022/06/30
         ab_image_max = np.max([objinfo["a_image"][0], objinfo["b_image"][0]])
 
+        # AA: 2024/09/09: re-make masks
+        spec_val = np.ma.masked_where((np.isnan(spec_val)) | (np.isnan(spec_unc)), spec_val)
+        spec_unc = np.ma.masked_where((np.isnan(spec_val)) | (np.isnan(spec_unc)), spec_unc)
+
         # apply the mask to the wavelength array
         masked_spec_lam = np.ma.masked_where(np.ma.getmask(spec_val), spec_lam)
+
         # compress the masked arrays for fitting
         
         print('Running the fit with the following settings: redshift = ',zguess,', fast_fit = ',fast_fit,', comp_fit = ',comp_fit,', polycont_fit = ',polycont_fit,', lincont_fit = ',lincont_fit)
         fit_inputs = [
             np.ma.compressed(masked_spec_lam),
-            np.ma.compressed(spec_val),
-            np.ma.compressed(spec_unc),
+            np.ma.compressed(spec_val), # AA: 2024-09-09: pass masked_spec_val as opposed spec_val for compression
+            np.ma.compressed(spec_unc), # AA: 2024-09-09: pass masked_spec_unc as opposed spec_unc for compression
             config_pars,
             zguess,
             fwhm_guess,

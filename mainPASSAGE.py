@@ -23,6 +23,9 @@ import argparse
 import subprocess
 from datetime import datetime, timedelta
 
+import warnings
+warnings.filterwarnings('ignore')
+
 # --------------------------------------------------------------------------------------------------------------------
 def parse_args():
     '''
