@@ -164,6 +164,12 @@ if __name__ == "__main__":
         args.parno = parno
         args = substitute_fieldname_in_paths(args, parno) # convert pseudo paths to proper paths
 
+        # -----check if some basic files are present, in order to proceed, or else skip--------
+        spec_cat_file = glob.glob(args.speccat_file_path + 'Par*spec*.fits')
+        if len(spec_cat_file) == 0:
+            print(f'Np spec catalog found for Par{parno} in {args.speccat_file_path}, so skipping this field.')
+            continue
+
         # -----import passage_analysis if not successful earlier------
         if 'passage' not in locals():
             sys.path.insert(1, args.code_dir)
