@@ -54,8 +54,8 @@ def get_user_directory_structure(args):
     By AA; Sep 2024
     '''
     if args.user == 'knedkova':
-        args.args.code_dir = '/Users/knedkova/Work/2024PASSAGE/passage_analysis/'
-        args.args.data_dir = '/Users/knedkova/Work/2024PASSAGE/output/'
+        args.code_dir = '/Users/knedkova/Work/2024PASSAGE/passage_analysis/'
+        args.data_dir = '/Users/knedkova/Work/2024PASSAGE/output/'
         args.output_dir = '/Users/knedkova/Work/2024PASSAGE/data/'
 
         # in the following paths, "FIELD" is a placeholder, later to be replaced by the relevant field name
