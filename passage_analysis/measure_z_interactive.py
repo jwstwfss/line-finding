@@ -370,7 +370,7 @@ def get_remaining_objects(full_obj_list, objid_done):
 def print_help_message():
     """
     Just putting this here to keep it out of the way.
-    -- modified by FH 11/18/24
+    -- modified by FH 12/5/24
     """
     msg = setcolors["helpmsg"] + "Available Options:\n"
     msg += setcolors["heading"] + "\tOBJECT SPECIFIC OPTIONS:\n"
@@ -401,7 +401,7 @@ def print_help_message():
     msg += (
         setcolors["helpmsg"] + "\tfw = change the fwhm guess in pixels\n"
         "\tt1, t2 = change transition wavelength between F115W and F150W (t1) and F150W and F200W (t2)\n"
-        "\tm1, m2, or m3 = mask up to three discontinuous wavelength regions\n"
+        "\tm1, m2, m3, m4 or m5 = mask up to five discontinuous wavelength regions\n"
         "\tnodes = change the wavelengths for the continuum spline nodes\n"
         "\taddnodes = add wavelengths for the continuum spline nodes\n"
         "\trmnodes = remove wavelengths from the continuum spline nodes\n"
@@ -618,7 +618,7 @@ def plot_chooseSpec(spdata1, spdata2, spdata3, config_pars, plottitle, outdir, z
     ax2.plot(np.linspace(0,1), np.linspace(0,1), 'hotpink', label = 'Contamination')
     ax2.legend(loc=1)
     # plot any masked regions
-    for mr in ["mask_region1", "mask_region2", "mask_region3"]:
+    for mr in ["mask_region1", "mask_region2", "mask_region3", "mask_region4", "mask_region5"]:
         if (config_pars[mr][0] != 0.0) & (config_pars[mr][1] != 0.0):
             for ax in [ax1, ax2, ax3]:  # [ax1, ax2]:
                 trans = mtransforms.blended_transform_factory(
@@ -799,7 +799,7 @@ def plot_object(zguess, zfit, spdata, config_pars, snr_meas_array, snr_tot_other
             ax.fill_between(spec_lam, 0, 1, where=spec_zero_mild == 1, color="orange", alpha=0.3, transform=trans, label="Minor 0th order contam")
 
     # plot any masked regions
-    for mr in ["mask_region1", "mask_region2", "mask_region3"]:
+    for mr in ["mask_region1", "mask_region2", "mask_region3", "mask_region4", "mask_region5"]:
         if (config_pars[mr][0] != 0.0) & (config_pars[mr][1] != 0.0):
             for ax in all_ax:  # [ax1, ax2]:
                 trans = mtransforms.blended_transform_factory(
@@ -1588,6 +1588,7 @@ def inspect_object(
                 print_prompt("Invalid Entry.")
 
         # mask out 1, 2, or 3 regions of the spectrum
+        #FH - mask out up to 5 regions of the spectrum
         elif option.strip().lower() == "m1":
             print_prompt("Enter wavelength window to mask out:  blue, red:")
             maskstr = input("> ")
@@ -1617,6 +1618,28 @@ def inspect_object(
                 print_prompt("Invalid entry. Enter wavelengths separated by commas")
             else:
                 config_pars["mask_region3"] = maskwave
+
+        ## FH - added two additional masks below
+
+        elif option.strip().lower() == "m4":
+            print_prompt("Enter wavelength window to mask out:  blue, red (Angstroms):")
+            maskstr = input("> ")
+            try:
+                maskwave = [float(maskstr.split(",")[0]), float(maskstr.split(",")[1])]
+            except (IndexError, ValueError):
+                print_prompt("Invalid entry. Enter wavelengths separated by commas")
+            else:
+                config_pars["mask_region4"] = maskwave
+
+        elif option.strip().lower() == "m5":
+            print_prompt("Enter wavelength window to mask out:  blue, red (Angstroms):")
+            maskstr = input("> ")
+            try:
+                maskwave = [float(maskstr.split(",")[0]), float(maskstr.split(",")[1])]
+            except (IndexError, ValueError):
+                print_prompt("Invalid entry. Enter wavelengths separated by commas")
+            else:
+                config_pars["mask_region5"] = maskwave
 
         # change the transition wavelength between the grisms
         elif option.strip().lower() == "t1":

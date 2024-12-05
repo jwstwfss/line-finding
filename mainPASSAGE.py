@@ -8,9 +8,10 @@ import glob
 os.system('/Applications/SAOImageDS9.app/Contents/MacOS/ds9 -title PASSAGE_DIRECT &')
 os.system('/Applications/SAOImageDS9.app/Contents/MacOS/ds9 -title PASSAGE_spec2D &')
 
-CODE_DIR = "/Users/knedkova/Work/2024PASSAGE/passage_analysis"
-OUTPUT_DIR = "/Users/knedkova/Work/2024PASSAGE/output"
-DATA_DIR = "/Users/knedkova/Work/2024PASSAGE/data/"
+CODE_DIR = "/Users/fhasan/Desktop/Research_STScI/PASSAGE/line-finding/passage_analysis"
+OUTPUT_DIR = "/Users/fhasan/Desktop/Research_STScI/PASSAGE/Output"
+DATA_DIR = "/Users/fhasan/Desktop/Research_STScI/PASSAGE/Data/"
+
 
 #############################################################
 ####### You should not need to change anything below. #######
