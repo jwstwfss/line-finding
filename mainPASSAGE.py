@@ -7,6 +7,7 @@
     Examples: run mainPASSAGE.py --user ayan_gdrive
               run mainPASSAGE.py --verbose
               run mainPASSAGE.py --user ayan_hd --prep_only allfields
+              run mainPASSAGE.py --root_dir /Volumes/Elements/acharyya_backup/Work/astro/passage/ --code_dir /Users/acharyya/Work/astro/passage/line-finding/passage_analysis/ --prep_only 28
 '''
 
 try:
@@ -34,7 +35,7 @@ def parse_args():
     '''
 
     parser = argparse.ArgumentParser(description='Produces emission line maps for JWST-PASSAGE data.')
-    parser.add_argument('--user', metavar='user', type=str, action='store', default='knedkova', help='Which user template to follow for directory structures? Default is knedkova')
+    parser.add_argument('--user', metavar='user', type=str, action='store', default=None, help='Which user template to follow for directory structures? Default is knedkova')
     parser.add_argument('--verbose', dest='verbose', action='store_true', default=False, help='Maximise prints to screen? Default is no.')
     parser.add_argument('--clobber_region', dest='clobber_region', action='store_true', default=False, help='Re-make *.reg files? Default is no.')
     parser.add_argument('--clobber_1D', dest='clobber_1D', action='store_true', default=False, help='Make *1D.dat outputs? Default is no.')
@@ -82,6 +83,25 @@ def get_user_directory_structure(args):
             args.root_dir = '/Users/acharyya/Library/CloudStorage/GoogleDrive-ayan.acharyya@inaf.it/My Drive/passage/'
 
         args.code_dir = '/Users/acharyya/Work/astro/passage/line-finding/passage_analysis/'
+        args.data_dir = args.root_dir + 'passage_data/'
+        args.output_dir = args.root_dir + 'passage_output/'
+
+        # in the following paths, "FIELD" is a placeholder, later to be replaced by the relevant field name
+        args.speccat_file_path = args.data_dir + 'ParFIELD/Products/' # this is where it will look for *speccat.fits
+        args.photcat_file_path = args.data_dir + 'ParFIELD/Products/' # this is where it will look for *photcat.fits
+        args.region_file_path = args.data_dir + 'ParFIELD/Regions/' # this is where it will look for any *.reg file
+        args.drizzled_images_path = args.data_dir + 'ParFIELD/Products/' # this is where it will look for any *drz*.fits file
+        args.spectra_path = args.data_dir + 'ParFIELD/Products/Spectra/' # this is where it will look for Par*G*.dat spectra files
+        args.spec1D_path = args.data_dir + 'ParFIELD/Products/spec1D/' # this is where it will look for *.1D.fits files
+        args.spec2D_path = args.data_dir + 'ParFIELD/Products/spec2D/' # this is where it will look for *.2D.fits files
+        args.beam_files_path = args.data_dir + 'ParFIELD/Extractions/' # this is where it will look for *beam.fits files
+
+        args.linelist_path = args.output_dir + 'linelist/' # this is where it will store the Par*linelist.dat files
+        args.stored_fits_path = args.output_dir + 'ParFIELD/' # this is where it will make Par*_output*/ directory, and fitdata/ and figs/ within it, to store the outputs
+
+        args.is_fieldname_padded = True # set to True if files/folders are named like Par005 instead of Par5 and so on
+
+    else:
         args.data_dir = args.root_dir + 'passage_data/'
         args.output_dir = args.root_dir + 'passage_output/'
 
