@@ -83,8 +83,8 @@ def get_user_directory_structure(args):
             args.root_dir = '/Users/acharyya/Library/CloudStorage/GoogleDrive-ayan.acharyya@inaf.it/My Drive/passage/'
 
         args.code_dir = '/Users/acharyya/Work/astro/passage/line-finding/passage_analysis/'
-        args.data_dir = args.root_dir + 'passage_data/'
-        args.output_dir = args.root_dir + 'passage_output/'
+        args.data_dir = args.root_dir + 'passage_data/v0.5/'
+        args.output_dir = args.root_dir + 'passage_output/v0.5/'
 
         # in the following paths, "FIELD" is a placeholder, later to be replaced by the relevant field name
         args.speccat_file_path = args.data_dir + 'ParFIELD/Products/' # this is where it will look for *speccat.fits
