@@ -177,11 +177,24 @@ def display_images_in_DS9(images, region_files, root=None, verbose=True):
 
     # Configure additional settings
     os.system(f"xpaset -p {ds9_title} tile")
-    # os.system(f"xpaset -p {ds9_title} lock frame wcs")
+    # os.system(f"xpaset -p {ds9_title} match frame wcs")
     os.system(f"xpaset -p {ds9_title} lock scale")
     # os.system(f"xpaset -p {ds9_title} zoom to fit")
     os.system(f"xpaset -p {ds9_title} scale mode zscale")
     os.system(f"xpaset -p {ds9_title} lock colorbar")
     #os.system(f"xpaset -p {ds9_title} lock scalelimits")
+
+    # Figured out the angle is ~250 for PAR 28. Need to check if this is true for all.
+    for framename in range(1,10):
+        os.system(f"xpaset -p {ds9_title} frame " + str(framename))
+        os.system(f"xpaset -p {ds9_title} wcs sky ecliptic")
+
+    os.system(f"xpaset -p {ds9_title} frame 3")
+    os.system(f"xpaset -p {ds9_title} match frame wcs")
+
+    # if I match at open -- does it stay matched going forward?
+    # Go to frame 1
+    # os.system(f"xpaset -p {ds9_title} frame 3")
+    # os.system(f"xpaset -p {ds9_title} match frame wcs")
 
     return

@@ -10,8 +10,8 @@ import pandas as pd
 from ast import literal_eval
 
 # PASSAGE gui helpers
-from guis_helpers import extract_image_extensions_key
-from guis_helpers import display_images_in_DS9
+from passage_analysis.guis_helpers import extract_image_extensions_key
+from passage_analysis.guis_helpers import display_images_in_DS9
 
 # xpa resources:
 # https://www.astro.louisville.edu/software/xmccd/archive/xmccd-4.1/xmccd-4.1e/docs/xpa/xpa.pdf
@@ -74,22 +74,22 @@ def showSpec2D_PASSAGE(parno, obid, path_to_spec2D=''):
     os.system(f"xpaset -p {SPEC2D_TITLE_DS9} lock scalelimits")
     os.system(f"xpaset -p {SPEC2D_TITLE_DS9} cmap grey")
     
-    for fno in [1,2,3,4,5]:
-        os.system(f"xpaset -p {SPEC2D_TITLE_DS9} frame " +str(fno))
+    for fframe in [1,2,3,4,5]:
+        os.system(f"xpaset -p {SPEC2D_TITLE_DS9} frame " +str(fframe))
         # 39.5 and 32.5 are just 1/2 cutout length & 1/2 cutout width. Will need to be changed for NIRCam
         # The length is set to the length of the cutout -8 (for 4 pix on each end)
         os.system(f"xpaset -p {SPEC2D_TITLE_DS9}"+" region command {box 41 32.5 62 10# color=green} ")
         os.system(f"xpaset -p {SPEC2D_TITLE_DS9} zoom to fit")
 
-    for fno in [6,7,8,9,10]:
-        os.system(f"xpaset -p {SPEC2D_TITLE_DS9} frame " +str(fno))
+    for fframe in [6,7,8,9,10]:
+        os.system(f"xpaset -p {SPEC2D_TITLE_DS9} frame " +str(fframe))
         # 39.5 and 32.5 are just 1/2 cutout length & 1/2 cutout width + a small offset derived by eye. 
         # Will need to be changed for NIRCam
         os.system(f"xpaset -p {SPEC2D_TITLE_DS9}"+" region command {box 48 32.5 76 10# color=green} ")
         os.system(f"xpaset -p {SPEC2D_TITLE_DS9} zoom to fit")
 
-    for fno in [11,12,13,14,15]:
-        os.system(f"xpaset -p {SPEC2D_TITLE_DS9} frame " +str(fno))
+    for fframe in [11,12,13,14,15]:
+        os.system(f"xpaset -p {SPEC2D_TITLE_DS9} frame " +str(fframe))
         # 70 and 33 are just 1/2 cutout length & 1/2 cutout width + a small offset derived by eye.
         # Will need to be changed for NIRCam
         os.system(f"xpaset -p {SPEC2D_TITLE_DS9}"+" region command {box 71.5 33 108 10# color=green} ")
@@ -122,8 +122,7 @@ def showDirect_PASSAGE(parno, path_to_drizzled_images='', path_to_region_files='
     ### KVN's quick fix to images having different names in different fields
     # specify the images to be displayed in DS9
     grism_file = glob(path_to_drizzled_images + '*gr150*_drz_sci.fits')
-    grism_file_ext = os.path.basename(grism_file[0]).split('_')[1] # AA 2024/09/05: modified to include os.path.basename()
-
+    grism_file_ext = str(grism_file[0]).split('_')[1]
 
     # specify the images to be displayed in DS9
     images = {
@@ -225,9 +224,8 @@ def panDispersed_PASSAGE(objid, parno, path_to_drizzled_images, path_to_region_f
     '''
     Modified by AA on Sep 2024 to allow flexible directory structures
     '''
-
     grism_file = glob(path_to_drizzled_images + '*gr150*_drz_sci.fits')
-    grism_file_ext = grism_file[0].split('_')[1]
+    grism_file_ext = str(grism_file[0]).split('_')[1]
 
     ds9_title = "PASSAGE_DIRECT"
     # since tiles are already assigned, setup by tile rather than grism

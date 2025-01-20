@@ -1,100 +1,128 @@
-This package merges line fitting code from AH with the interactive redshift 
-catalog from NR.  Several helper functions can be found in the following modules.  
-The key code is "measure_z_interactive", which operates on a candidate line list produced by
-"detect_grism_lines.py."   
+# Documentation for line-finding code
 
-The key improvements over "get_z_interactive" are the following: 
+This software is used to identify line-emitting objects and measure emission line properties in JWST NIRISS WFSS Grism spectra, based on the pure-parallel survey PASSAGE (PID#1571). Installation instructions, including required packages, are in **passage_analysis/README.md** 
 
+After installation, to run the software, simply go into the git cloned directory and run 
 
-1. The plots and ds9 views are displayed in the same way as previously in "get_z_interactive." 
-However, now, the line and continuum fits are shown as well.   
+*python mainPASSAGE.py*
 
-2. The interactive options have changed to allow the user to get a good fit. new options include: 
+The user will be asked to enter the number of a parallel field and a username of choice. The fitting is then performed on an object-by-object basis. 
 
--- masking regions of the spectrum
--- change the g102-g141 transition wavelength
--- modify the continuum spline by changing the nodes 
--- trying a different "guess" fwhm 
--- or entering an arbitrary redshift. 
+The following is a list of commands for this software.
 
-When the fit is satisfactory, the user types "a" (accept) or "ac" (accept contaminatd), and all the flux measurements
-for all possible lines are appended to a catalog.  
+**OBJECT SPECIFIC OPTIONS:**  
 
-3. The catalog is no longer a line list, but rather one line per object.  It has many columns, but is 
-readable with astropy.io.ascii.  The new catalog is called ParNNNlines_catalog.dat.  
+a = accept object fit  
 
-4. Along the same strategy, we are carrying out the interactive fitting on an object-by-object basis, rather than
-line-by-line.  Because all the lines are fit simultaneously, this is the only sensible thing to do. 
+ac = accept object fit, noting contamination  
 
-5. The user can still choose to leave comments, and these are stored separately since they are not machine readable. 
-The file contains an entry for each object in the candidate list, whether comments are entered or not.  This serves as 
-a way to mark our progress. 
+r = reject object  
 
-6. When we stop the code and start again, the comments file is read to find the last object that was completed. 
+c = add comment  
 
-7. Both the comments and catalog file are appended, rather than deleted and re-written in their entirty every time
-an object is completed.  This makes the business of saving our temporary work, as was done with "get_z_interactive" no longer necessary.   Every time we 
-accept/reject an object, the relevant files are opened, written, and closed.  
+user = toggle between previously saved fits  
 
-8.  The code saves fit figures in Spectra/figs. These are presently ugly. 
-(The catalogs are still stored in Spectra/linelists).    The bottom panel (s/n vs lam) in get_z_interactive was 
-judged to be low-information and removed.  It is not the job of a person to determine if the line has sufficient s/n 
-to be included or not. 
+contam = specify contamination to line flux and/or continuum  
 
-9.  Some variables which should not be hard coded (i.e. the G102-G141 transition wavelength) are stored in a configuration file.  
-At the moment, this file needs to be in the directory where the code is being run.
+reset = reset interactive options back to default for this object  
 
-10. To run: 
-
---unpack the code and put the wisp directory in your python path 
-I have the directory wisp_analysis in /Users/ahenry/ahenry_py 
-
---then my  bash file: 
-
-export PYTHONPATH="/Users/ahenry/ahenry_py:$PYTHONPATH"
-(if you have not defined $PYTHONPATH previously, then simply remove that part of the line.)
-
---- go to the Spectra subdirectory, after "detect_grism_lines.py" has been run and the "linelist" directory exists. 
-
---- copy the default.config file to this directory 
-
---- ipython 
-
---- import wisp_analysis as wisp 
-
---- wisp.measure_z_interactive() 
-
-have fun! 
+s = print the (in progress) object summary
 
 
-11.  the plots are ugly... this is what they're showing:
+**EMISSION LINE SPECIFIC OPTIONS:**  
 
-black = spectrum
+z = enter a different z guess  
 
-magenta  = zero orders 
+w = enter a different emission line wavelength guess
 
-red = contam 
+dz = change the allowable redshift difference between lines  
 
-red  = model  
-(These are really easy to tell apart even with the same color, but I should still change it.) 
+n = skip to next brightest line found in this object
 
-blue-dashed = continuum model 
+2gauss = double gaussian profile for the line being fitted
 
-red vertical = line from candidate list; if multiple lines in the candidate list exist, then the one with the highest preliminary s/n is chosen and guessed to be ha. 
+1gauss = option to go back to 1 gaussian fit after selecting 2 gaussian fit
 
-blue vertical = expected location of other lines; list taken from get_z_interactive 
-lam_Oii,lam_Hbeta,lam_Oiii_1,lam_Oiii_2,lam_Halpha,lam_Sii,lam_Siii_1,lam_Siii_2,lam_He,lam_Pag,lam_Fe,lam_Pab]
-note that the last three are not yet included in the model fit, but they can be added. 
+ha, hb, hg, o31, o32, o2, s2, s31, s32, lya, c4, pb, pa, pg = change strongest emission line
+
+The full list of commands and corresponding lines are as follows
+
+| **Command** | **Line**       | **Vacuum Wavelength (Å)** |
+| ----------- | -------------- | ------------------------- |
+| lya         | Ly-alpha 1215  | 1215.670                  |
+| c4          | CIV 1548       | 1548.203                  |
+| o2          | [OII] 3730     | 3729.875                  |
+| hg          | H-gamma 4342   | 4341.684                  |
+| hb          | H-beta 4863    | 4862.683                  |
+| o31         | [OIII] 4959    | 4960.295                  |
+| o32         | [OIII] 5007    | 5008.240                  |
+| ha          | H-alpha 6563   | 6564.610                  |
+| s2          | [SII] 6716     | 6718.290                  |
+| s31         | [SIII] 9069    | 9071.100                  |
+| s32         | [SIII] 9532    | 9533.200                  |
+| he          | HeI 10830      | 10832.86                  |
+| pg          | Pa-gamma 10941 | 10941.1                   |
+| pb          | Pa-beta 12822  | 12821.6                   |
+| pa          | Pa-alpha 18756 | 18756.1                   |
 
 
-cyan dotted vertical = G102/G141 transition. this line will move if you change the transition wavelength in the interactive fitter. 
+**SPECTRUM SPECIFIC OPTIONS:**  
+
+fw = change the fwhm guess in pixels  
+
+t1, t2 = change transition wavelength between F115W and F150W (t1) and F150W and F200W (t2)  
+
+m1, m2, or m3 = mask up to three discontinuous wavelength regions  
+
+nodes = change the wavelengths for the continuum spline nodes  
+
+addnodes = add wavelengths for the continuum spline nodes
+
+rmnodes = remove wavelengths from the continuum spline nodes
+
+shiftallnodes = SHIFT ALL nodes used for the continuum spline by some wavelength   
+
+bluecut = change the blue cutoff of the F115W grism  
+
+redcut  = change the red cutoff of the F200W grism
+
+lincont = fit continuum as a line
+
+polycont = fit continuum as a higher-order polynomial
+
+splinecont = fit continuum as a spline (piecewise) polynomial
+
+grismr = use only Grism-R spectrum for line-fitting
+
+grismrcontam = use only Grism-R spectrum (with contamination) for line-fitting
+
+grismc = use only Grism-C spectrum for line-fitting
+
+grismccontam = use only Grism-C spectrum (with contamination) for line-fitting
+
+comb = Use combined spectrum (default)
+
+combcontam = Use combined spectrum with contamination
 
 
-black dots: spline nodes. The default for these is set in default.config, and they can also be changed in the interactiev fitter 
 
-blue dots: locations of all peaks found by "detect_grism_lines.py" 
+**DS9 SPECIFIC OPTIONS:**  
 
+lin = linear z-scale  
 
+log = logarithmic z-scale
 
+zs102 = z1,z2 comma-separated range for G102 z-scale  
 
+zs141 = z1,z2 comma-separated range for G141 z-scale  
 
+dc = recenter direct images  
+
+reload = reload direct images  
+
+dr = reload direct image reg files
+
+**SOFTWARE SPECIFIC OPTIONS:**  
+
+h = print this message  
+q = quit

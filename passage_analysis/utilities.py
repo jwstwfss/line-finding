@@ -55,6 +55,31 @@ def read_config(config, availgrism='both'):
                 config_pars.setdefault('mask_region3', []) 
                 config_pars['mask_region3'].append(masklam[0]) 
                 config_pars['mask_region3'].append(masklam[1])  
+            elif name == 'mask_region4': 
+                masklam = [float(s) for s in line.split()[1::]]
+                config_pars.setdefault('mask_region4', []) 
+                config_pars['mask_region4'].append(masklam[0]) 
+                config_pars['mask_region4'].append(masklam[1])  
+            elif name == 'mask_region5': 
+                masklam = [float(s) for s in line.split()[1::]]
+                config_pars.setdefault('mask_region5', []) 
+                config_pars['mask_region5'].append(masklam[0]) 
+                config_pars['mask_region5'].append(masklam[1])  
+            elif name == 'mask_region6': 
+                masklam = [float(s) for s in line.split()[1::]]
+                config_pars.setdefault('mask_region6', []) 
+                config_pars['mask_region6'].append(masklam[0]) 
+                config_pars['mask_region6'].append(masklam[1])  
+            elif name == 'mask_region7': 
+                masklam = [float(s) for s in line.split()[1::]]
+                config_pars.setdefault('mask_region7', []) 
+                config_pars['mask_region7'].append(masklam[0]) 
+                config_pars['mask_region7'].append(masklam[1])  
+            elif name == 'mask_region8': 
+                masklam = [float(s) for s in line.split()[1::]]
+                config_pars.setdefault('mask_region8', []) 
+                config_pars['mask_region8'].append(masklam[0]) 
+                config_pars['mask_region8'].append(masklam[1])  
             else:  
                 val  = line.split()[1] 
                 if is_number(val) == True:  val = float(val)

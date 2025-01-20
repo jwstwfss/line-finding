@@ -1,0 +1,67 @@
+[build-system]
+requires = ["setuptools>=61.0","setuptools_scm>=8.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "passage_analysis"
+# dynamic = ["version"]
+version = "0.5.0"
+authors = [
+  { name="Kalina Nedkova", email="anyone@example.com" },
+]
+description = "Software for identification and measurement of line-emitting objects."
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Astronomy",
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "numpy>=1.26.4",
+    "astropy>=5.3",
+    "pandas",
+    "scipy",
+    "matplotlib"
+]
+
+[project.urls]
+"Homepage" = "https://github.com/jwstwfss/line-finding"
+"Bug Tracker" = "https://github.com/jwstwfss/line-finding"
+
+[tool.setuptools.package-data]
+"*" = ["*.*"]
+
+# [tool.black]
+# line-length = 88
+# target-version = ['py311']
+# extend-exclude = '(.*.txt|.*.md|.*.toml|.*.odg)'
+# preview = true
+
+# [tool.isort]
+# profile = "black"
+
+# [tool.numpydoc_validation]
+# checks = [
+#     "all",   # report on all checks, except the below
+#     "EX01",
+#     "SA01",
+#     "ES01",
+#     "RT01",
+# ]
+# exclude = [  # don't report on objects that match any of these regex
+#     '\.undocumented_method$',
+#     '\.__repr__$',
+#     '\._.*$',  # Ignore anything that's private (e.g., starts with _)
+# ]
+# override_SS05 = [  # override SS05 to allow docstrings starting with these words
+#     '^Process ',
+#     '^Assess ',
+#     '^Access ',
+# ]
+
+# [tool.setuptools_scm]
+# version_file = "passage_analysis/_version.py"

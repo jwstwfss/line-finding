@@ -7,24 +7,17 @@ import pickle
 import os
 import astropy.io.ascii as asciitable
 import astropy.io.fits as fits
-import mpfit
+from passage_analysis import mpfit
 import math
 from scipy import interpolate
 from scipy import integrate
 
-from trim_spec import trim_spec
-from utilities import gaussian
-from utilities import is_number
-from utilities import read_config
-from find_cwt import find_cwt
-from find_cwt  import loop_field_cwt
+from passage_analysis.trim_spec import trim_spec
+from passage_analysis.utilities import gaussian, is_number, read_config
+from passage_analysis.find_cwt import find_cwt, loop_field_cwt
 
-from fitting import emissionline_model
-from fitting import model_resid
-from fitting import fit_obj
-from fitting import get_ratio_indices
-from fitting import get_fitpar_indices
-#from fitting import fitandplot # MDR 2022/05/26 - Defined in fitting.py but not used so commented out.
-from guis import *
-from measure_z_interactive import *
+from passage_analysis.fitting import emissionline_model, model_resid, fit_obj, get_ratio_indices, get_fitpar_indices
+
+from passage_analysis.guis import *
+from passage_analysis.measure_z_interactive import *
 import pickle

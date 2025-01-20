@@ -71,7 +71,7 @@ def check_grism(tbdata, min_wav, max_wav):
 
 
 
-def trim_spec(tbdata_blue, tbdata_green, tbdata_red, config_pars, mask_zeros=False, return_masks=False):
+def trim_spec(tbdata_blue, tbdata_green, tbdata_red, config_pars, mask_zeros=False, return_masks=True):
     """Create one array of spectra, etc. from multiple grism 1d files
     
     If masking: 
@@ -138,6 +138,7 @@ def trim_spec(tbdata_blue, tbdata_green, tbdata_red, config_pars, mask_zeros=Fal
     ### removed masked regions
     for k,v in config_pars.items():
         if 'mask_region' in k:
+            # print(k, v) ; this prints the masked regions for testing (KVN, Jan2025)
             bluecut = v[0]
             redcut = v[1]
             mask = np.logical_and(lam_spec > bluecut, lam_spec < redcut)
