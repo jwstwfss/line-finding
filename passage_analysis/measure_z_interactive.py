@@ -47,6 +47,7 @@ import sys
 from matplotlib import gridspec
 import matplotlib.transforms as mtransforms
 import matplotlib.patheffects as PathEffects
+from copy import copy
 
 # Explicitly import readline to make the text entry process easier on OSX
 import readline
@@ -1299,10 +1300,9 @@ def inspect_object(
     # Skip if previous fit is to be accepted
     done = 0 if rejectPrevFit else 1
     fast_fit = False  # MDR 2022/06/30 - move to configuration file?
-
+    orientation = None
 
     while done == 0:
-        
         # KVN: creating spectra for each orientation ("T" for total/combined, "R" for row, "C" for column)
         # Note - do not move below outside the while loop. The masking (and probably other features) will not work properly
         spdata_T = trim_spec(tab_blue, tab_mid, tab_red, config_pars, mask_zeros=True, return_masks=True)
@@ -1319,7 +1319,8 @@ def inspect_object(
 
         # KVN: the default is to use the combined spectra as this will likely be the preferred option for most cases.
         # This will be updated when/if the user makes a different selection
-        spdata = spdata_T
+        if orientation is None:
+            spdata = copy(spdata_T)
         spec_lam = spdata[0]; spec_val = spdata[1]; spec_unc = spdata[2]; spec_con = spdata[3]; spec_zer = spdata[4]; mask_flg = spdata[5]
         
         # sticking with the while loop to determine whether user is finished with object
@@ -3187,9 +3188,9 @@ def writeToCatalog(
             cat.write("#" + str(results_idx + 0) + " " + line + "_flux \n")
             cat.write("#" + str(results_idx + 1) + " " + line + "_error \n")
             cat.write("#" + str(results_idx + 2) + " " + line + "_ew_obs \n")
-            cat.write("#" + str(results_idx + 3) + " " + line + "_ratio \n")
-            cat.write("#" + str(results_idx + 4) + " " + line + "_contam \n")
-            results_idx = results_idx + 5
+            #cat.write("#" + str(results_idx + 3) + " " + line + "_ratio \n")
+            cat.write("#" + str(results_idx + 3) + " " + line + "_contam \n")
+            results_idx = results_idx + 4
 
         cat.close()
     # does not leave space before RA?
@@ -3223,7 +3224,7 @@ def writeToCatalog(
         + "{:>13.2e}".format(fitresults["la_1216_flux"])
         + "{:>13.2e}".format(fitresults["la_1216_error"])
         + "{:>13.2e}".format(fitresults["la_1216_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(contamflags["la_1216"])
         + "{:>13.2e}".format(fitresults["la_wing_flux"])
         + "{:>13.2e}".format(fitresults["la_wing_error"])
