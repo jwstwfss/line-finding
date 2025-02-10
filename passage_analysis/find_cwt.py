@@ -59,7 +59,7 @@ def find_cwt(lam, flux, err, zeros, fwhm_est_pix, beam_name, config_pars, plotfl
     peaks = peaks[w[0]]
 
     # KVN testing:
-    print('peaks: ', peaks)
+    #print('peaks: ', peaks)
     #print('division: ', (flux[peaks] - cont_filter[peaks])/cont_filter[peaks])
     
     # reject lines with presumably low EWs
@@ -351,6 +351,8 @@ def loop_field_cwt(path_to_data, path_to_code, parno):
         config_pars = read_config(str(path_to_code)+'/default.config')
         #config_pars['transition_wave'] = 11200.
         config_pars['transition_wave'] = 13000. # MDR 2022/08/16
+
+    outfile.close()
 
     tab = asciitable.read(os.path.join(path_to_data, 'linelist/temp'), format = 'no_header')
     par = tab['col1']
