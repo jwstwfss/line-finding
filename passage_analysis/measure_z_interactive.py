@@ -3143,7 +3143,7 @@ def writeToCatalog(
         cat.write("chisq  ")
         cat.write("fwhm  ")
         cat.write("fwhm_error  ")
-        cat.write("double_comp")
+        cat.write("double_comp  ")
         cat.write("la_1216_dz  ")
         cat.write("la_1216_dz  ")
         cat.write("c4_1548_dz  ")
