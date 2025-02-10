@@ -3090,6 +3090,29 @@ def measure_z_interactive(
     if os.path.exists("G141_trace.reg") == True:
         os.unlink("G141_trace.reg")
 
+# def writeToCatalog(catalogname: str, parnos: str, objid, ra_obj, dec_obj, a_image_obj, b_image_obj, 
+#                    jmag_obj, hmag_obj, snr_tot_others, fitresults, contamflags, comp_fit):
+#     result_lines = ["la_1216","la_wing","la_1216_wing","n5_1238","n5_1242","n5_1238_1242","c4_1548","c4_1550","c4_1548_1550","h2_1640",
+#             "o3_1660","o3_1666","o3_1660_1666","s3_1883","s3_1892","s3_1883_1892","c3_1907","c3_1909","c3_1907_1909","m2_2796","m2_2803",
+#             "m2_2796_2803","o2_3727","o2_3730","o2_3727_3730","hg_4342","o3_4363","h2_4686","hb_4863","o3_4959","o3_5007","o3_4959_5007",
+#             "o1_6300","o1_6363","o1_6300_6363","n2_6550","ha_6565","n2_6585","ha_6550_6565_6585","s2_6716","s2_6731","s2_6716_6731",
+#             "s3_9069","s3_9532","s3_9069_9532","he10830","pg_10941","pb_12822","pa_18756"]
+#     flux_cols = list(map(lambda z: z + '_flux', result_lines))
+#     error_cols = list(map(lambda z: z + '_error', result_lines))
+#     ew_obs_cols = list(map(lambda z: z + '_ew_obs', result_lines))
+#     ratio_cols = list(map(lambda z: z + '_ratio', result_lines))
+#     contam_cols = list(map(lambda z: z + '_contam', result_lines))
+#         #+ "{:>13.2e}".format(fitresults["hg_4342_flux"])
+#         #+ "{:>13.2e}".format(fitresults["hg_4342_error"])
+#         #+ "{:>13.2e}".format(fitresults["hg_4342_ew_obs"])
+#         #+ "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
+#         #+ "{:>6d}".format(contamflags["hg_4342"])
+
+    
+#     dataframe = pd.DataFrame({})
+
+#     dataframe.to_csv('')
+
 
 # # parnos, objid are scalar not array.
 def writeToCatalog(
@@ -3108,27 +3131,27 @@ def writeToCatalog(
     comp_fit):
     if not os.path.exists(catalogname):
         cat = open(catalogname, "w")
-        cat.write("#1 objid \n")
-        cat.write("#2 redshift \n")
-        cat.write("#3 redshift_error \n")
-        cat.write("#4 ra_obj \n")
-        cat.write("#5 dec_obj \n")
-        cat.write("#6 f140w_mag \n")
-        cat.write("#7 a_image_obj \n")
-        cat.write("#8 b_image_obj \n")
-        cat.write("#9 snr_tot_others \n")
-        cat.write("#10 chisq \n")
-        cat.write("#11 fwhm_muse \n")
-        cat.write("#12 fwhm_muse_error \n")
-        cat.write("#13 fwhm_g141 \n")
-        cat.write("#14 fwhm_g141_error \n")
-        cat.write("#15 la_1216_dz \n")
-        cat.write("#16 c4_1548_dz \n")
-        cat.write("#17 uv_line_dz \n")
-        cat.write("#18 m2_2796_dz \n")
-        cat.write("#19 o2_3727_dz \n")
-        cat.write("#20 o3_5007_dz \n")
-        cat.write("#21 s3_he_dz \n")
+        cat.write("objid  ")
+        cat.write("redshift  ")
+        cat.write("redshift_error  ")
+        cat.write("ra_obj  ")
+        cat.write("dec_obj  ")
+        cat.write("f140w_mag  ")
+        cat.write("a_image_obj  ")
+        cat.write("b_image_obj  ")
+        cat.write("snr_tot_others  ")
+        cat.write("chisq  ")
+        cat.write("fwhm  ")
+        cat.write("fwhm_error  ")
+        cat.write("double_comp")
+        cat.write("la_1216_dz  ")
+        cat.write("la_1216_dz  ")
+        cat.write("c4_1548_dz  ")
+        cat.write("uv_line_dz  ")
+        cat.write("m2_2796_dz  ")
+        cat.write("o2_3727_dz  ")
+        cat.write("o3_5007_dz  ")
+        cat.write("s3_he_dz  ")
 
         result_lines = [
             "la_1216",
@@ -3182,15 +3205,20 @@ def writeToCatalog(
             "pa_18756",
         ]
 
-        results_idx = 23
+        results_idx = 21
 
         for line in result_lines:
-            cat.write("#" + str(results_idx + 0) + " " + line + "_flux \n")
-            cat.write("#" + str(results_idx + 1) + " " + line + "_error \n")
-            cat.write("#" + str(results_idx + 2) + " " + line + "_ew_obs \n")
-            #cat.write("#" + str(results_idx + 3) + " " + line + "_ratio \n")
-            cat.write("#" + str(results_idx + 3) + " " + line + "_contam \n")
-            results_idx = results_idx + 4
+            # cat.write("#" + str(results_idx + 0) + " " + line + "_flux  ")
+            # cat.write("#" + str(results_idx + 1) + " " + line + "_error  ")
+            # cat.write("#" + str(results_idx + 2) + " " + line + "_ew_obs  ")
+            # cat.write("#" + str(results_idx + 3) + " " + line + "_ratio  ")
+            # cat.write("#" + str(results_idx + 3) + " " + line + "_contam  ")
+            cat.write(line + "_flux  ")
+            cat.write(line + "_error  ")
+            cat.write(line + "_ew_obs  ")
+            cat.write(line + "_ratio  ")
+            cat.write(line + "_contam  ")
+            results_idx = results_idx + 5
 
         cat.close()
     # does not leave space before RA?
@@ -3198,10 +3226,10 @@ def writeToCatalog(
     # Added KVN 12/2024 - ratio of the broad line is always zero for 1 Gaussian component fit
     ratio = 0
 
-    outstr = (
+    outstr = ("\n"+
         "{:<6d}".format(objid)
-        + "{:>8.5f}".format(fitresults["redshift"])
-        + "{:>8.5f}".format(fitresults["redshift_error"])
+        + "{:>9.5f}".format(fitresults["redshift"])
+        + "{:>9.5f}".format(fitresults["redshift_error"])
         + "{:>12.6f}".format(ra_obj[0])
         + "{:>12.6f}".format(dec_obj[0])
         + "{:>8.2f}".format(hmag_obj[0])
@@ -3209,11 +3237,11 @@ def writeToCatalog(
         + "{:>8.3f}".format(b_image_obj[0])
         + "{:>10.2f}".format(snr_tot_others)
         + "{:>10.2f}".format(fitresults["chisq"])
-        + "{:>10.2f}".format(fitresults["fwhm_muse"])
-        + "{:>10.2f}".format(fitresults["fwhm_muse_error"])
-        + "{:>10.2f}".format(fitresults["fwhm_g141"])
-        + "{:>10.2f}".format(fitresults["fwhm_g141_error"])
-        + "{:>s}".format(str(comp_fit))
+        # + "{:>10.2f}".format(fitresults["fwhm_muse"])
+        # + "{:>10.2f}".format(fitresults["fwhm_muse_error"])
+        + "{:>13.3e}".format(fitresults["fwhm_g141"])
+        + "{:>13.3e}".format(fitresults["fwhm_g141_error"])
+        + "    " + "{:>s}".format(str(comp_fit))
         + "{:>10.5f}".format(fitresults["la_1216_dz"])
         + "{:>10.5f}".format(fitresults["c4_1548_dz"])
         + "{:>10.5f}".format(fitresults["uv_line_dz"])
@@ -3224,197 +3252,197 @@ def writeToCatalog(
         + "{:>13.2e}".format(fitresults["la_1216_flux"])
         + "{:>13.2e}".format(fitresults["la_1216_error"])
         + "{:>13.2e}".format(fitresults["la_1216_ew_obs"])
-        + "{:>6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(contamflags["la_1216"])
         + "{:>13.2e}".format(fitresults["la_wing_flux"])
         + "{:>13.2e}".format(fitresults["la_wing_error"])
         + "{:>13.2e}".format(fitresults["la_wing_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(contamflags["la_1216"])
         + "{:>13.2e}".format(fitresults["la_1216_wing_flux"])
         + "{:>13.2e}".format(fitresults["la_1216_wing_error"])
         + "{:>13.2e}".format(fitresults["la_1216_wing_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(contamflags["la_1216"])
         + "{:>13.2e}".format(fitresults["n5_1238_flux"])
         + "{:>13.2e}".format(fitresults["n5_1238_error"])
         + "{:>13.2e}".format(fitresults["n5_1238_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(contamflags["n5_1238"])
         + "{:>13.2e}".format(fitresults["n5_1242_flux"])
         + "{:>13.2e}".format(fitresults["n5_1242_error"])
         + "{:>13.2e}".format(fitresults["n5_1242_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(contamflags["n5_1242"])
         + "{:>13.2e}".format(fitresults["n5_1238_1242_flux"])
         + "{:>13.2e}".format(fitresults["n5_1238_1242_error"])
         + "{:>13.2e}".format(fitresults["n5_1238_1242_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(np.max([contamflags["n5_1238"], contamflags["n5_1242"]]))
         + "{:>13.2e}".format(fitresults["c4_1548_flux"])
         + "{:>13.2e}".format(fitresults["c4_1548_error"])
         + "{:>13.2e}".format(fitresults["c4_1548_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(contamflags["c4_1548"])
         + "{:>13.2e}".format(fitresults["c4_1550_flux"])
         + "{:>13.2e}".format(fitresults["c4_1550_error"])
         + "{:>13.2e}".format(fitresults["c4_1550_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(contamflags["c4_1550"])
         + "{:>13.2e}".format(fitresults["c4_1548_1550_flux"])
         + "{:>13.2e}".format(fitresults["c4_1548_1550_error"])
         + "{:>13.2e}".format(fitresults["c4_1548_1550_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(np.max([contamflags["c4_1548"], contamflags["c4_1550"]]))
         + "{:>13.2e}".format(fitresults["h2_1640_flux"])
         + "{:>13.2e}".format(fitresults["h2_1640_error"])
         + "{:>13.2e}".format(fitresults["h2_1640_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(contamflags["h2_1640"])
         + "{:>13.2e}".format(fitresults["o3_1660_flux"])
         + "{:>13.2e}".format(fitresults["o3_1660_error"])
         + "{:>13.2e}".format(fitresults["o3_1660_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(contamflags["o3_1660"])
         + "{:>13.2e}".format(fitresults["o3_1666_flux"])
         + "{:>13.2e}".format(fitresults["o3_1666_error"])
         + "{:>13.2e}".format(fitresults["o3_1666_ew_obs"])        
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(contamflags["o3_1666"])
         + "{:>13.2e}".format(fitresults["o3_1660_1666_flux"])
         + "{:>13.2e}".format(fitresults["o3_1660_1666_error"])
         + "{:>13.2e}".format(fitresults["o3_1660_1666_ew_obs"])
         + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
-        + "{:>6d}".format(np.max([contamflags["o3_1660"], contamflags["o3_1666"]]))
+        + "{:>7.2f}".format(np.max([contamflags["o3_1660"], contamflags["o3_1666"]]))
         + "{:>13.2e}".format(fitresults["s3_1883_flux"])
         + "{:>13.2e}".format(fitresults["s3_1883_error"])
         + "{:>13.2e}".format(fitresults["s3_1883_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(contamflags["s3_1883"])
         + "{:>13.2e}".format(fitresults["s3_1892_flux"])
         + "{:>13.2e}".format(fitresults["s3_1892_error"])
         + "{:>13.2e}".format(fitresults["s3_1892_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(contamflags["s3_1892"])
         + "{:>13.2e}".format(fitresults["s3_1883_1892_flux"])
         + "{:>13.2e}".format(fitresults["s3_1883_1892_error"])
         + "{:>13.2e}".format(fitresults["s3_1883_1892_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(np.max([contamflags["s3_1883"], contamflags["s3_1892"]]))
         + "{:>13.2e}".format(fitresults["c3_1907_flux"])
         + "{:>13.2e}".format(fitresults["c3_1907_error"])
         + "{:>13.2e}".format(fitresults["c3_1907_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(contamflags["c3_1907"])
         + "{:>13.2e}".format(fitresults["c3_1909_flux"])
         + "{:>13.2e}".format(fitresults["c3_1909_error"])
         + "{:>13.2e}".format(fitresults["c3_1909_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(contamflags["c3_1909"])
         + "{:>13.2e}".format(fitresults["c3_1907_1909_flux"])
         + "{:>13.2e}".format(fitresults["c3_1907_1909_error"])
         + "{:>13.2e}".format(fitresults["c3_1907_1909_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(np.max([contamflags["c3_1907"], contamflags["c3_1909"]]))
         + "{:>13.2e}".format(fitresults["m2_2796_flux"])
         + "{:>13.2e}".format(fitresults["m2_2796_error"])
         + "{:>13.2e}".format(fitresults["m2_2796_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(contamflags["m2_2796"])
         + "{:>13.2e}".format(fitresults["m2_2803_flux"])
         + "{:>13.2e}".format(fitresults["m2_2803_error"])
         + "{:>13.2e}".format(fitresults["m2_2803_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(contamflags["m2_2803"])
         + "{:>13.2e}".format(fitresults["m2_2796_2803_flux"])
         + "{:>13.2e}".format(fitresults["m2_2796_2803_error"])
         + "{:>13.2e}".format(fitresults["m2_2796_2803_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(np.max([contamflags["m2_2796"], contamflags["m2_2803"]]))
         + "{:>13.2e}".format(fitresults["o2_3727_flux"])
         + "{:>13.2e}".format(fitresults["o2_3727_error"])
         + "{:>13.2e}".format(fitresults["o2_3727_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(contamflags["o2_3727"])
         + "{:>13.2e}".format(fitresults["o2_3730_flux"])
         + "{:>13.2e}".format(fitresults["o2_3730_error"])
         + "{:>13.2e}".format(fitresults["o2_3730_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(contamflags["o2_3730"])
         + "{:>13.2e}".format(fitresults["o2_3727_3730_flux"])
         + "{:>13.2e}".format(fitresults["o2_3727_3730_error"])
         + "{:>13.2e}".format(fitresults["o2_3727_3730_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(np.max([contamflags["o2_3727"], contamflags["o2_3730"]]))
         + "{:>13.2e}".format(fitresults["hg_4342_flux"])
         + "{:>13.2e}".format(fitresults["hg_4342_error"])
         + "{:>13.2e}".format(fitresults["hg_4342_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(contamflags["hg_4342"])
         + "{:>13.2e}".format(fitresults["o3_4363_flux"])
         + "{:>13.2e}".format(fitresults["o3_4363_error"])
         + "{:>13.2e}".format(fitresults["o3_4363_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(contamflags["o3_4363"])
         + "{:>13.2e}".format(fitresults["h2_4686_flux"])
         + "{:>13.2e}".format(fitresults["h2_4686_error"])
         + "{:>13.2e}".format(fitresults["h2_4686_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(contamflags["h2_4686"])
         + "{:>13.2e}".format(fitresults["hb_4863_flux"])
         + "{:>13.2e}".format(fitresults["hb_4863_error"])
         + "{:>13.2e}".format(fitresults["hb_4863_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(contamflags["hb_4863"])
         + "{:>13.2e}".format(fitresults["o3_4959_flux"])
         + "{:>13.2e}".format(fitresults["o3_4959_error"])
         + "{:>13.2e}".format(fitresults["o3_4959_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(contamflags["o3_4959"])
         + "{:>13.2e}".format(fitresults["o3_5007_flux"])
         + "{:>13.2e}".format(fitresults["o3_5007_error"])
         + "{:>13.2e}".format(fitresults["o3_5007_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(contamflags["o3_5007"])
         + "{:>13.2e}".format(fitresults["o3_4959_5007_flux"])
         + "{:>13.2e}".format(fitresults["o3_4959_5007_error"])
         + "{:>13.2e}".format(fitresults["o3_4959_5007_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(np.max([contamflags["o3_4959"], contamflags["o3_5007"]]))
         + "{:>13.2e}".format(fitresults["o1_6300_flux"])
         + "{:>13.2e}".format(fitresults["o1_6300_error"])
         + "{:>13.2e}".format(fitresults["o1_6300_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(contamflags["o1_6300"])
         + "{:>13.2e}".format(fitresults["o1_6363_flux"])
         + "{:>13.2e}".format(fitresults["o1_6363_error"])
         + "{:>13.2e}".format(fitresults["o1_6363_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(contamflags["o1_6363"])
         + "{:>13.2e}".format(fitresults["o1_6300_6363_flux"])
         + "{:>13.2e}".format(fitresults["o1_6300_6363_error"])
         + "{:>13.2e}".format(fitresults["o1_6300_6363_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(np.max([contamflags["o1_6300"], contamflags["o1_6363"]]))
         + "{:>13.2e}".format(fitresults["n2_6550_flux"])
         + "{:>13.2e}".format(fitresults["n2_6550_error"])
         + "{:>13.2e}".format(fitresults["n2_6550_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(contamflags["n2_6550"])
         + "{:>13.2e}".format(fitresults["ha_6565_flux"])
         + "{:>13.2e}".format(fitresults["ha_6565_error"])
         + "{:>13.2e}".format(fitresults["ha_6565_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(contamflags["ha_6565"])
         + "{:>13.2e}".format(fitresults["n2_6585_flux"])
         + "{:>13.2e}".format(fitresults["n2_6585_error"])
         + "{:>13.2e}".format(fitresults["n2_6585_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(contamflags["n2_6585"])
         + "{:>13.2e}".format(fitresults["ha_6550_6565_6585_flux"])
         + "{:>13.2e}".format(fitresults["ha_6550_6565_6585_error"])
         + "{:>13.2e}".format(fitresults["ha_6550_6565_6585_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(
             np.max(
                 [contamflags["n2_6550"], contamflags["ha_6565"], contamflags["n2_6585"]]
@@ -3423,54 +3451,53 @@ def writeToCatalog(
         + "{:>13.2e}".format(fitresults["s2_6716_flux"])
         + "{:>13.2e}".format(fitresults["s2_6716_error"])
         + "{:>13.2e}".format(fitresults["s2_6716_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(contamflags["s2_6716"])
         + "{:>13.2e}".format(fitresults["s2_6731_flux"])
         + "{:>13.2e}".format(fitresults["s2_6731_error"])
         + "{:>13.2e}".format(fitresults["s2_6731_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(contamflags["s2_6731"])
         + "{:>13.2e}".format(fitresults["s2_6716_6731_flux"])
         + "{:>13.2e}".format(fitresults["s2_6716_6731_error"])
         + "{:>13.2e}".format(fitresults["s2_6716_6731_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(np.max([contamflags["s2_6716"], contamflags["s2_6731"]]))
         + "{:>13.2e}".format(fitresults["s3_9069_flux"])
         + "{:>13.2e}".format(fitresults["s3_9069_error"])
         + "{:>13.2e}".format(fitresults["s3_9069_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(contamflags["s3_9069"])
         + "{:>13.2e}".format(fitresults["s3_9532_flux"])
         + "{:>13.2e}".format(fitresults["s3_9532_error"])
         + "{:>13.2e}".format(fitresults["s3_9532_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(contamflags["s3_9532"])
         + "{:>13.2e}".format(fitresults["s3_9069_9532_flux"])
         + "{:>13.2e}".format(fitresults["s3_9069_9532_error"])
         + "{:>13.2e}".format(fitresults["s3_9069_9532_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(np.max([contamflags["s3_9069"], contamflags["s3_9532"]]))
         + "{:>13.2e}".format(fitresults["he10830_flux"])
         + "{:>13.2e}".format(fitresults["he10830_error"])
         + "{:>13.2e}".format(fitresults["he10830_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(contamflags["he10830"])
         + "{:>13.2e}".format(fitresults["pg_10941_flux"])
         + "{:>13.2e}".format(fitresults["pg_10941_error"])
         + "{:>13.2e}".format(fitresults["pg_10941_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(contamflags["pg_10941"])
         + "{:>13.2e}".format(fitresults["pb_12822_flux"])
         + "{:>13.2e}".format(fitresults["pb_12822_error"])
         + "{:>13.2e}".format(fitresults["pb_12822_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(contamflags["pb_12822"])
         + "{:>13.2e}".format(fitresults["pa_18756_flux"])
         + "{:>13.2e}".format(fitresults["pa_18756_error"])
         + "{:>13.2e}".format(fitresults["pa_18756_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(contamflags["pa_18756"])
-        + "\n"
     )
 
     """
