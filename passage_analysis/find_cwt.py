@@ -4,6 +4,7 @@ from glob import glob
 from passage_analysis import *
 from astropy.table import Table
 from astropy.io import ascii as asc
+from copy import copy
 
 def find_cwt(lam, flux, err, zeros, fwhm_est_pix, beam_name, config_pars, plotflag = True):
 
@@ -167,13 +168,6 @@ def loop_field_cwt(path_to_data, path_to_code, parno):
     cat = Table.read(catalogs[0])
     print('')
     print('Catalog opened successfully: ' + str(catalogs[0]))
-#     print('')
-#     print(cat)
-#     print('')
-#     print(cat.info)
-#     print('')
-#     print(cat.colnames)
-    # M.D.R. - 10/08/2020
 
     if len(catalogs) > 1:
         cat2 = Table.read(catalogs[1])
@@ -194,7 +188,11 @@ def loop_field_cwt(path_to_data, path_to_code, parno):
         # get spectral data
         # spdata = asc.read(filename, names = ['lambda', 'flux', 'ferror', 'contam', 'zero'])
         spdata = Table.read(filename, format="ascii")
-        spdata.rename_columns(["wave", "ferr", "zeroth"], ["lambda", "ferror", "zero"])
+        col_names = spdata.colnames
+        if 'err' in col_names:
+            spdata.rename_columns(["wave", "error", "zeroth"], ["lambda", "ferror", "zero"])
+        elif 'ferr' in col_names:
+            spdata.rename_columns(["wave", "ferr", "zeroth"], ["lambda", "ferror", "zero"])
         trimmed_spec = trim_spec(spdata, None, None, config_pars)
 
         # look up the object in the se catalog and grab the a_image
@@ -254,7 +252,11 @@ def loop_field_cwt(path_to_data, path_to_code, parno):
         print('starting obj id = ', filename)
         # spdata = asc.read(filename, names = ['lambda', 'flux', 'ferror', 'contam', 'zero'])
         spdata = Table.read(filename, format="ascii")
-        spdata.rename_columns(["wave", "ferr", "zeroth"], ["lambda", "ferror", "zero"])
+        col_names = spdata.colnames
+        if 'err' in col_names:
+            spdata.rename_columns(["wave", "error", "zeroth"], ["lambda", "ferror", "zero"])
+        elif 'ferr' in col_names:
+            spdata.rename_columns(["wave", "ferr", "zeroth"], ["lambda", "ferror", "zero"])
         trimmed_spec = trim_spec(None, spdata, None, config_pars)
         # beam = float(filename.split('_')[1].split('.')[0])
         beam = float(filename.split('Spectra/Par')[1].split('_')[1].split('.')[0])
@@ -305,7 +307,11 @@ def loop_field_cwt(path_to_data, path_to_code, parno):
         print('starting obj id = ', filename)
         # spdata = asc.read(filename, names = ['lambda', 'flux', 'ferror', 'contam', 'zero'])
         spdata = Table.read(filename, format="ascii")
-        spdata.rename_columns(["wave", "ferr", "zeroth"], ["lambda", "ferror", "zero"])
+        col_names = spdata.colnames
+        if 'err' in col_names:
+            spdata.rename_columns(["wave", "error", "zeroth"], ["lambda", "ferror", "zero"])
+        elif 'ferr' in col_names:
+            spdata.rename_columns(["wave", "ferr", "zeroth"], ["lambda", "ferror", "zero"])
         trimmed_spec = trim_spec(None, None, spdata, config_pars)
         # beam = float(filename.split('_')[1].split('.')[0])
         beam = float(filename.split('Spectra/Par')[1].split('_')[1].split('.')[0])

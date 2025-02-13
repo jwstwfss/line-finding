@@ -1068,21 +1068,36 @@ def inspect_object(
     if os.path.exists(specnameg1):
         availgrism += "g115"
         tab_blue = Table.read(specnameg1, format="ascii")
-        tab_blue.rename_columns(["wave", "ferr", "zeroth"], ["lambda", "ferror", "zero"])
+        col_names = tab_blue.colnames
+        if 'err' in col_names:
+            tab_blue.rename_columns(["wave", "error", "zeroth"], ["lambda", "ferror", "zero"])
+        elif 'ferr' in col_names:
+            tab_blue.rename_columns(["wave", "ferr", "zeroth"], ["lambda", "ferror", "zero"])
+        #tab_blue.rename_columns(["wave", "ferr", "zeroth"], ["lambda", "ferror", "zero"])
         tab_blue_cont = np.copy(tab_blue)
         tab_blue_cont['flux'] = tab_blue['flux'] + tab_blue['contam']
     else: tab_blue = None; tab_blue_cont = None 
     if os.path.exists(specnameg2):
         availgrism += "g150"
         tab_mid = Table.read(specnameg2, format="ascii")
-        tab_mid.rename_columns(["wave", "ferr", "zeroth"], ["lambda", "ferror", "zero"])
+        col_names = tab_mid.colnames
+        if 'err' in col_names:
+            tab_mid.rename_columns(["wave", "error", "zeroth"], ["lambda", "ferror", "zero"])
+        elif 'ferr' in col_names:
+            tab_mid.rename_columns(["wave", "ferr", "zeroth"], ["lambda", "ferror", "zero"])
+        #tab_mid.rename_columns(["wave", "ferr", "zeroth"], ["lambda", "ferror", "zero"])
         tab_mid_cont = np.copy(tab_mid)
         tab_mid_cont['flux'] = tab_mid['flux'] + tab_mid['contam']
     else: tab_mid = None; tab_mid_cont = None
     if os.path.exists(specnameg3):
         availgrism += "g200"
         tab_red = Table.read(specnameg3, format="ascii")
-        tab_red.rename_columns(["wave", "ferr", "zeroth"], ["lambda", "ferror", "zero"])
+        col_names = tab_red.colnames
+        if 'err' in col_names:
+            tab_red.rename_columns(["wave", "error", "zeroth"], ["lambda", "ferror", "zero"])
+        elif 'ferr' in col_names:
+            tab_red.rename_columns(["wave", "ferr", "zeroth"], ["lambda", "ferror", "zero"])
+        #tab_red.rename_columns(["wave", "ferr", "zeroth"], ["lambda", "ferror", "zero"])
         tab_red_cont = np.copy(tab_red)
         tab_red_cont['flux'] = tab_red['flux'] + tab_red['contam']
     else: tab_red = None; tab_red_cont = None
