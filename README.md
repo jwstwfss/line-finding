@@ -1,6 +1,6 @@
 # Documentation for line-finding code
 
-This software is used to identify line-emitting objects and measure emission line properties in JWST NIRISS WFSS Grism spectra, based on the pure-parallel survey PASSAGE (PID#1571). Installation instructions, including required packages, are in **passage_analysis/README.md** 
+This software is used to identify line-emitting objects and measure emission line properties in JWST NIRISS WFSS Grism spectra, based on the pure-parallel survey PASSAGE (PID#1571).
 
 After installation, to run the software, simply go into the git cloned directory and run 
 
