@@ -40,7 +40,7 @@ if __name__ == "__main__":
 
     specdatfiles = glob.glob(DATA_DIR + "Par" + str(parno) + "/Spectra/*.dat")
     if len(specdatfiles) == 0:
-        utilities.add_header_keyword(parno = parno, path_to_data = DATA_DIR)
+        #utilities.add_header_keyword(parno = parno, path_to_data = DATA_DIR)
         utilities.make_spectra_dat_files(parno = parno, path_to_data = DATA_DIR)
 
     # check if line list exists. If not, run code to create the linelist
@@ -48,7 +48,7 @@ if __name__ == "__main__":
     linelist = glob.glob(DATA_DIR + "/linelist/Par"+str(parno)+"lines.dat")
     if len(linelist) == 0:
         print('\033[94m' + "No line list file found, creating the line list for you now." + '\033[0m')
-        passage.loop_field_cwt(path_to_data=DATA_DIR, path_to_code=CODE_DIR, parno=parno)
+        passage.loop_field_cwt(path_to_data=DATA_DIR, path_to_code=CODE_DIR, parno=str(parno))
     
     # run the measure_z_interactive codes
     passage.measure_z_interactive(path_to_data=DATA_DIR, path_to_code=CODE_DIR, parno=parno)
