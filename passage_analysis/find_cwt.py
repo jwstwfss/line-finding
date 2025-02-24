@@ -308,6 +308,7 @@ def loop_field_cwt(path_to_data, path_to_code, parno):
         # spdata = asc.read(filename, names = ['lambda', 'flux', 'ferror', 'contam', 'zero'])
         spdata = Table.read(filename, format="ascii")
         col_names = spdata.colnames
+        print(col_names);print('err' in col_names); print('ferr' in col_names)
         if 'err' in col_names:
             spdata.rename_columns(["wave", "error", "zeroth"], ["lambda", "ferror", "zero"])
         elif 'ferr' in col_names:

@@ -509,7 +509,7 @@ def emissionline_model(pars, x, comps, polycont, lincont):
         add_emission_line_to_model(line_model, pb_12822_obs, pb_12822_amp)
         add_emission_line_to_model(line_model, pa_18756_obs, pa_18756_amp)
 
-        add_emission_line_to_model(line_model, ne3_3869_obs, pa_18756_amp)
+        add_emission_line_to_model(line_model, ne3_3869_obs, ne3_3869_amp)
         
         ############################################################################
         # lyman alpha is highly asymmetric so add a red wing component.
@@ -606,8 +606,8 @@ def emissionline_model(pars, x, comps, polycont, lincont):
         la_wing_sig = pars[la_wing_sig_idx];           #la_wing_broad_sig = pars[la_wing_sig_broad_idx]
 
         # KVN: add new lines:
-        ne3_3869_amp = pars[ne3_3869_amp_idx]; 
-    
+        ne3_3869_amp = pars[ne3_3869_idx];         ne3_3869_broad_amp = pars[ne3_3869_broad_idx]; 
+        
         
         # define the observed wavelengths
         la_1216_obs = la_1216_vac * (1 + z + la_1216_dz)
@@ -645,6 +645,7 @@ def emissionline_model(pars, x, comps, polycont, lincont):
         pg_10941_obs = pg_10941_vac * (1 + z)
         pb_12822_obs = pb_12822_vac * (1 + z)
         pa_18756_obs = pa_18756_vac * (1 + z)
+        ne3_3869_obs = ne3_3869_vac * (1 + z)
         
         # initialize the continuum and emission line models as lists of zeros.
         cont_model_double_gauss = x * 0.
@@ -674,6 +675,7 @@ def emissionline_model(pars, x, comps, polycont, lincont):
         add_emission_line_to_model2gauss(line_model_narrow_gauss, pg_10941_obs, pg_10941_amp, pg_10941_broad_amp)
         add_emission_line_to_model2gauss(line_model_narrow_gauss, pb_12822_obs, pb_12822_amp, pb_12822_broad_amp)
         add_emission_line_to_model2gauss(line_model_narrow_gauss, pa_18756_obs, pa_18756_amp, pa_18756_broad_amp)
+        add_emission_line_to_model2gauss(line_model_narrow_gauss, ne3_3869_obs, ne3_3869_amp, ne3_3869_broad_amp)
 
         ## KVN: Then the Broad Component
         #add_emission_line_to_model(la_1216_obs, la_1216_amp)
@@ -829,6 +831,7 @@ def fit_obj(input_list):
     pg_10941_obs = pg_10941_vac * (1 + z_in)
     pb_12822_obs = pb_12822_vac * (1 + z_in)
     pa_18756_obs = pa_18756_vac * (1 + z_in)
+    ne3_3869_obs = ne3_3869_vac * (1 + z_in)
 
     ############################################################################
     ############################################################################
@@ -1074,7 +1077,7 @@ def fit_obj(input_list):
         's3_1883', 'c3_1907', 'm2_2796', 'o2_3727', 'hg_4342', \
         'o3_4363', 'h2_4686', 'hb_4863', 'o3_4959', 'o1_6300', \
         'ha_6565', 'n2_6550', 's2_6716', 's3_9069', 'he10830', \
-        'pg_10941', 'pb_12822', 'pa_18756']
+        'pg_10941', 'pb_12822', 'pa_18756', 'ne3_3869']
 
         # fix the lower limits to zero because the gaussian amplitudes must be positive.
         for line in loop_lines:
@@ -1088,7 +1091,7 @@ def fit_obj(input_list):
         's3_1883_broad', 'c3_1907_broad', 'm2_2796_broad', 'o2_3727_broad', 'hg_4342_broad', \
         'o3_4363_broad', 'h2_4686_broad', 'hb_4863_broad', 'o3_4959_broad', 'o1_6300_broad', \
         'ha_6565_broad', 'n2_6550_broad', 's2_6716_broad', 's3_9069_broad', 'he10830_broad', \
-        'pg_10941_broad', 'pb_12822_broad', 'pa_18756_broad']
+        'pg_10941_broad', 'pb_12822_broad', 'pa_18756_broad', 'ne3_3869_broad']
 
         #### KVN: if not fitting double gaussian, set all broad component amplitudes to zero
         if comps_in == False:
@@ -1542,6 +1545,9 @@ def fit_obj(input_list):
                 pb_12822_obs, pb_12822_idx, pb_12822_vac, False, polycont_in, lincont_in)
             pa_18756_flux, pa_18756_err, pa_18756_ew_obs = calculate_emission_line_flux(
                 pa_18756_obs, pa_18756_idx, pa_18756_vac, False, polycont_in, lincont_in)
+
+            ne3_3869_flux, ne3_3869_err, ne3_3869_ew_obs = calculate_emission_line_flux(
+                ne3_3869_obs, ne3_3869_idx, ne3_3869_vac, False, polycont_in, lincont_in)
        
             '''
             Calculate the flux, error, and equivalent width values for halpha and
@@ -1617,6 +1623,10 @@ def fit_obj(input_list):
             pa_18756tot_flux, pa_18756tot_err, pa_18756tot_ew_obs, pa_18756nar_flux, pa_18756nar_err, pa_18756nar_ew_obs, pa_18756bro_flux, pa_18756bro_err, pa_18756bro_ew_obs = calculate_emission_line_flux2gauss(
                 pa_18756_obs, pa_18756_idx, pa_18756_vac,pa_18756_broad_idx,True,polycont_in, lincont_in)
 
+            ne3_3869tot_flux, ne3_3869tot_err, ne3_3869tot_ew_obs, ne3_3869nar_flux, ne3_3869nar_err, ne3_3869nar_ew_obs, ne3_3869bro_flux, ne3_3869bro_err, ne3_3869bro_ew_obs = calculate_emission_line_flux2gauss(
+                ne3_3869_obs, ne3_3869_idx,ne3_3869_vac,ne3_3869_broad_idx,True,polycont_in, lincont_in)
+
+            
             # # calculate the emission line fluxes for the BROAD component and return them to measure_z_interactive().
             # h2_1640_broad_flux, h2_1640_broad_err, h2_1640_broad_ew_obs = calculate_emission_line_flux(
             #     h2_1640_obs, h2_1640_broad_idx, h2_1640_vac, True, polycont_in, lincont_in)
@@ -1892,7 +1902,7 @@ def fit_obj(input_list):
             'n2_6550', 'ha_6565', 'n2_6585', 'ha_6550_6565_6585', \
             's2_6716', 's2_6731', 's2_6716_6731', \
             's3_9069', 's3_9532', 's3_9069_9532', 'he10830', \
-            'pg_10941', 'pb_12822', 'pa_18756']
+            'pg_10941', 'pb_12822', 'pa_18756', 'ne3_3869']
     
             for line in result_lines:
                 fit_results[line+'_flux']   = eval(line+'_flux') * scl
@@ -1993,7 +2003,8 @@ def fit_obj(input_list):
             'he10830tot', 'he10830nar', 'he10830bro', \
             'pg_10941tot', 'pg_10941nar', 'pg_10941bro', \
             'pb_12822tot', 'pb_12822nar', 'pb_12822bro', \
-            'pa_18756tot', 'pa_18756nar', 'pa_18756bro']
+            'pa_18756tot', 'pa_18756nar', 'pa_18756bro', \
+            'ne3_3869tot', 'ne3_3869nar', 'ne3_3869bro']
     
             for line in result_lines:
                 fit_results[line+'_flux']   = eval(line+'_flux') * scl

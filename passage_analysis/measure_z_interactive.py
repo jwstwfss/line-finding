@@ -103,6 +103,7 @@ he10830_vac = 10832.86
 pg_10941_vac = 10941.1
 pb_12822_vac = 12821.6
 pa_18756_vac = 18756.1
+ne3_3869_vac = 3868.760
 
 # Make all catalog header and data write commands loops over the 'flux_strings' variable.
 
@@ -138,6 +139,7 @@ supported_lines = [
     pg_10941_vac,
     pb_12822_vac,
     pa_18756_vac,
+    ne3_3869_vac
 ]
 
 # These lines are close to their doublets so are not plotted in ax1.
@@ -154,8 +156,7 @@ supported_lines_extra = [
     o1_6363_vac,
     n2_6550_vac,
     n2_6585_vac,
-    s2_6731_vac,
-]
+    s2_6731_vac]
 
 supported_lines_strings = [
     r"Ly$\alpha$",
@@ -181,6 +182,7 @@ supported_lines_strings = [
     r"P$\gamma$",
     r"P$\beta$",
     r"P$\alpha$",
+    "[Ne III]",
 ]
 
 flux_strings_1gauss = [
@@ -207,6 +209,7 @@ flux_strings_1gauss = [
     "pg_10941",
     "pb_12822",
     "pa_18756",
+    "ne3_3869"
 ]
 
 flux_strings_2gauss = [
@@ -233,6 +236,7 @@ flux_strings_2gauss = [
     "pg_10941tot", "pg_10941nar", "pg_10941bro",
     "pb_12822tot", "pb_12822nar", "pb_12822bro",
     "pa_18756tot", "pa_18756nar", "pa_18756bro",
+    "ne3_3869tot", "ne3_3869nar", "ne3_3869bro",
 ]
 # , 'pg_10941','pb_12822','pa_18756']
 
@@ -241,7 +245,7 @@ o3_1660, o3_1666, s3_1883, s3_1892, c3_1907, c3_1909, \
 m2_2796, m2_2803, o2_3727, o2_3730, hg_4342, o3_4363, \
 h2_4686, hb_4863, o3_4959, o3_5007, o1_6300, o1_6363, \
 n2_6550, ha_6565, n2_6585, s2_6716, s2_6731, s3_9069, \
-s3_9532, he10830, pg_10941, pb_12822, pa_18756, cont"
+s3_9532, he10830, pg_10941, pb_12822, pa_18756, ne3_3869, cont"
 
 # colors to help split up terminal output
 # helpmsg = light blue
@@ -1069,7 +1073,7 @@ def inspect_object(
         availgrism += "g115"
         tab_blue = Table.read(specnameg1, format="ascii")
         col_names = tab_blue.colnames
-        if 'err' in col_names:
+        if 'error' in col_names:
             tab_blue.rename_columns(["wave", "error", "zeroth"], ["lambda", "ferror", "zero"])
         elif 'ferr' in col_names:
             tab_blue.rename_columns(["wave", "ferr", "zeroth"], ["lambda", "ferror", "zero"])
@@ -1081,7 +1085,7 @@ def inspect_object(
         availgrism += "g150"
         tab_mid = Table.read(specnameg2, format="ascii")
         col_names = tab_mid.colnames
-        if 'err' in col_names:
+        if 'error' in col_names:
             tab_mid.rename_columns(["wave", "error", "zeroth"], ["lambda", "ferror", "zero"])
         elif 'ferr' in col_names:
             tab_mid.rename_columns(["wave", "ferr", "zeroth"], ["lambda", "ferror", "zero"])
@@ -1093,7 +1097,7 @@ def inspect_object(
         availgrism += "g200"
         tab_red = Table.read(specnameg3, format="ascii")
         col_names = tab_red.colnames
-        if 'err' in col_names:
+        if 'error' in col_names:
             tab_red.rename_columns(["wave", "error", "zeroth"], ["lambda", "ferror", "zero"])
         elif 'ferr' in col_names:
             tab_red.rename_columns(["wave", "ferr", "zeroth"], ["lambda", "ferror", "zero"])
@@ -1106,38 +1110,68 @@ def inspect_object(
 
     if os.path.exists(specnameg1_R):
         tab_blue_R = Table.read(specnameg1_R, format="ascii")
-        tab_blue_R.rename_columns(["wave", "ferr", "zeroth"], ["lambda", "ferror", "zero"])
+        col_names = tab_blue_R.colnames
+        if 'error' in col_names:
+            tab_blue_R.rename_columns(["wave", "error", "zeroth"], ["lambda", "ferror", "zero"])
+        elif 'ferr' in col_names:
+            tab_blue_R.rename_columns(["wave", "ferr", "zeroth"], ["lambda", "ferror", "zero"])
+        #tab_blue_R.rename_columns(["wave", "ferr", "zeroth"], ["lambda", "ferror", "zero"])
         tab_blue_R_cont = np.copy(tab_blue_R)
         tab_blue_R_cont['flux'] = tab_blue_R['flux'] + tab_blue_R['contam']
     else: tab_blue_R = None; tab_blue_R_cont = None
     if os.path.exists(specnameg2_R):
         tab_mid_R = Table.read(specnameg2_R, format="ascii")
-        tab_mid_R.rename_columns(["wave", "ferr", "zeroth"], ["lambda", "ferror", "zero"])
+        col_names = tab_mid_R.colnames
+        if 'error' in col_names:
+            tab_mid_R.rename_columns(["wave", "error", "zeroth"], ["lambda", "ferror", "zero"])
+        elif 'ferr' in col_names:
+            tab_mid_R.rename_columns(["wave", "ferr", "zeroth"], ["lambda", "ferror", "zero"])        
+        #tab_mid_R.rename_columns(["wave", "ferr", "zeroth"], ["lambda", "ferror", "zero"])
         tab_mid_R_cont = np.copy(tab_mid_R)
         tab_mid_R_cont['flux'] = tab_mid_R['flux'] + tab_mid_R['contam']
     else: tab_mid_R = None; tab_mid_R_cont= None
     if os.path.exists(specnameg3_R):
         tab_red_R = Table.read(specnameg3_R, format="ascii")
-        tab_red_R.rename_columns(["wave", "ferr", "zeroth"], ["lambda", "ferror", "zero"])
+        col_names = tab_red_R.colnames
+        if 'error' in col_names:
+            tab_red_R.rename_columns(["wave", "error", "zeroth"], ["lambda", "ferror", "zero"])
+        elif 'ferr' in col_names:
+            tab_red_R.rename_columns(["wave", "ferr", "zeroth"], ["lambda", "ferror", "zero"])        
+        #tab_red_R.rename_columns(["wave", "ferr", "zeroth"], ["lambda", "ferror", "zero"])
         tab_red_R_cont = np.copy(tab_red_R)
         tab_red_R_cont['flux'] = tab_red_R['flux'] + tab_red_R['contam']
     else: tab_red_R = None; tab_red_R_cont = None
 
     if os.path.exists(specnameg1_C):
         tab_blue_C = Table.read(specnameg1_C, format="ascii")
-        tab_blue_C.rename_columns(["wave", "ferr", "zeroth"], ["lambda", "ferror", "zero"])
+        col_names = tab_blue_C.colnames
+        if 'error' in col_names:
+            tab_blue_C.rename_columns(["wave", "error", "zeroth"], ["lambda", "ferror", "zero"])
+        elif 'ferr' in col_names:
+            tab_blue_C.rename_columns(["wave", "ferr", "zeroth"], ["lambda", "ferror", "zero"])        
+        #tab_blue_C.rename_columns(["wave", "ferr", "zeroth"], ["lambda", "ferror", "zero"])
         tab_blue_C_cont = np.copy(tab_blue_C)
         tab_blue_C_cont['flux'] = tab_blue_C['flux'] + tab_blue_C['contam']
     else: tab_blue_C = None; tab_blue_C_cont = None
     if os.path.exists(specnameg2_C):
         tab_mid_C = Table.read(specnameg2_C, format="ascii")
-        tab_mid_C.rename_columns(["wave", "ferr", "zeroth"], ["lambda", "ferror", "zero"])
+        col_names = tab_mid_C.colnames
+        if 'error' in col_names:
+            tab_mid_C.rename_columns(["wave", "error", "zeroth"], ["lambda", "ferror", "zero"])
+        elif 'ferr' in col_names:
+            tab_mid_C.rename_columns(["wave", "ferr", "zeroth"], ["lambda", "ferror", "zero"])        
+        #tab_mid_C.rename_columns(["wave", "ferr", "zeroth"], ["lambda", "ferror", "zero"])
         tab_mid_C_cont = np.copy(tab_mid_C)
         tab_mid_C_cont['flux'] = tab_mid_C['flux'] + tab_mid_C['contam']
     else: tab_mid_C = None; tab_mid_C_cont = None
     if os.path.exists(specnameg3_C):
         tab_red_C = Table.read(specnameg3_C, format="ascii")
-        tab_red_C.rename_columns(["wave", "ferr", "zeroth"], ["lambda", "ferror", "zero"])
+        col_names = tab_red_C.colnames
+        if 'error' in col_names:
+            tab_red_C.rename_columns(["wave", "error", "zeroth"], ["lambda", "ferror", "zero"])
+        elif 'ferr' in col_names:
+            tab_red_C.rename_columns(["wave", "ferr", "zeroth"], ["lambda", "ferror", "zero"])        
+        #tab_red_C.rename_columns(["wave", "ferr", "zeroth"], ["lambda", "ferror", "zero"])
         tab_red_C_cont = np.copy(tab_red_C)
         tab_red_C_cont['flux'] = tab_red_C['flux'] + tab_red_C['contam']
     else: tab_red_C = None; tab_red_C_cont = None 
@@ -1309,12 +1343,13 @@ def inspect_object(
         "pg_10941": 0,
         "pb_12822": 0,
         "pa_18756": 0,
+        "ne3_3869": 0,
         "cont": 0,
     }  # MDR 2022/07/22
 
     # Skip if previous fit is to be accepted
     done = 0 if rejectPrevFit else 1
-    fast_fit = False  # MDR 2022/06/30 - move to configuration file?
+    fast_fit = True  # MDR 2022/06/30 - move to configuration file?
     orientation = None
 
     while done == 0:
@@ -1341,7 +1376,7 @@ def inspect_object(
         # sticking with the while loop to determine whether user is finished with object
         # get spectrum for obj. do this every time because sometimes we
         # re-read with a mask or a different transition wavelength
-
+        
         # KVN: trim_spec has been updated to take 3 grism filters
         # and the code now does this for the row & column (R & C)
         plot_chooseSpec(spdata_T, spdata_R, spdata_C, config_pars, plottitle, outdir)
@@ -1518,13 +1553,16 @@ def inspect_object(
         # accept object MDR 2022/06/30
         elif option.strip().lower() == "a":
             if comp_fit == True:
+                print("\n--- You are accepting the double Gaussian fit ---")
                 if fast_fit == False:
                     done = 1
                     zset = 1
                     flagcont = 1
                 elif fast_fit == True:
-                    print("\nWARNING: Still using fast fit mode, type full for refined fit.")
+                    print('\x1b[6;30;43m' +"\nWARNING: Still using fast fit mode, RUNNING FULL FIT NOW.\nTo accept the full fit type 'a' again" + '\x1b[0m')
+                    fast_fit = False
 
+                    
             elif comp_fit == False:
                 print("\n--- You are accepting the single Gaussian fit ---")
                 if fast_fit == False:
@@ -1532,7 +1570,8 @@ def inspect_object(
                     zset = 1
                     flagcont = 1
                 elif fast_fit == True:
-                        print("\nWARNING: Still using fast fit mode, type full for refined fit.")
+                    print('\x1b[6;30;43m' +"\nWARNING: Still using fast fit mode, RUNNING FULL FIT NOW.\nTo accept the full fit type 'a' again" + '\x1b[0m')
+                    fast_fit = False
 
 
         ### KVN 05-Aug-2024
@@ -2054,6 +2093,8 @@ def inspect_object(
             zguess = (lamline / s3_9069_vac) - 1.0
         elif option.strip().lower() == "s32":
             zguess = (lamline / s3_9532_vac) - 1.0
+        elif option.strip().lower() == "pg":
+            zguess = (lamline / pg_10941_vac) - 1.0
         elif option.strip().lower() == "pb":
             zguess = (lamline / pb_12822_vac) - 1.0
         elif option.strip().lower() == "pa":
@@ -3217,7 +3258,8 @@ def writeToCatalog(
             "he10830",
             "pg_10941",
             "pb_12822",
-            "pa_18756",
+            "pa_18756", 
+            "ne3_3869",
         ]
 
         results_idx = 21
@@ -3513,6 +3555,11 @@ def writeToCatalog(
         + "{:>13.2e}".format(fitresults["pa_18756_ew_obs"])
         + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
         + "{:>6d}".format(contamflags["pa_18756"])
+        + "{:>13.2e}".format(fitresults["ne3_3869_flux"])                # new line; Added KVN 02/2025
+        + "{:>13.2e}".format(fitresults["ne3_3869_error"])               # new line; Added KVN 02/2025
+        + "{:>13.2e}".format(fitresults["ne3_3869_ew_obs"])              # new line; Added KVN 02/2025 
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24       # new line; Added KVN 02/2025
+        + "{:>6d}".format(contamflags["ne3_3869"])                       # new line; Added KVN 02/2025
     )
 
     """
@@ -3550,28 +3597,27 @@ def writeToCatalog2gauss(
     
     if not os.path.exists(catalogname):
         cat = open(catalogname, "w")
-        cat.write("#1 objid \n")
-        cat.write("#2 redshift \n")
-        cat.write("#3 redshift_error \n")
-        cat.write("#4 ra_obj \n")
-        cat.write("#5 dec_obj \n")
-        cat.write("#6 f140w_mag \n")
-        cat.write("#7 a_image_obj \n")
-        cat.write("#8 b_image_obj \n")
-        cat.write("#9 snr_tot_others \n")
-        cat.write("#10 chisq \n")
-        cat.write("#11 fwhm_muse \n")
-        cat.write("#12 fwhm_muse_error \n")
-        cat.write("#13 fwhm_g141 \n")
-        cat.write("#14 fwhm_g141_error \n")
-        cat.write("#15 2Gauss_fit \n")
-        cat.write("#16 la_1216_dz \n")
-        cat.write("#17 c4_1548_dz \n")
-        cat.write("#18 uv_line_dz \n")
-        cat.write("#19 m2_2796_dz \n")
-        cat.write("#20 o2_3727_dz \n")
-        cat.write("#21 o3_5007_dz \n")
-        cat.write("#22 s3_he_dz \n")
+        cat.write("objid  ")
+        cat.write("redshift  ")
+        cat.write("redshift_error  ")
+        cat.write("ra_obj  ")
+        cat.write("dec_obj  ")
+        cat.write("f140w_mag  ")
+        cat.write("a_image_obj  ")
+        cat.write("b_image_obj  ")
+        cat.write("snr_tot_others  ")
+        cat.write("chisq  ")
+        cat.write("fwhm  ")
+        cat.write("fwhm_error  ")
+        cat.write("double_comp  ")
+        cat.write("la_1216_dz  ")
+        cat.write("la_1216_dz  ")
+        cat.write("c4_1548_dz  ")
+        cat.write("uv_line_dz  ")
+        cat.write("m2_2796_dz  ")
+        cat.write("o2_3727_dz  ")
+        cat.write("o3_5007_dz  ")
+        cat.write("s3_he_dz  ")
 
         
         # flux_strings_2gauss = [
@@ -3648,9 +3694,10 @@ def writeToCatalog2gauss(
             "he10830",
             "pg_10941",
             "pb_12822",
-            "pa_18756"]
+            "pa_18756", 
+            "ne3_3869"]
 
-        results_idx = 23
+        results_idx = 21
 
         for line in result_lines:
             cat.write("#" + str(results_idx + 0) + " " + line + "_flux \n")
@@ -3674,11 +3721,11 @@ def writeToCatalog2gauss(
         + "{:>8.3f}".format(b_image_obj[0])
         + "{:>10.2f}".format(snr_tot_others)
         + "{:>10.2f}".format(fitresults["chisq"])
-        + "{:>10.2f}".format(fitresults["fwhm_muse"])
-        + "{:>10.2f}".format(fitresults["fwhm_muse_error"])
-        + "{:>10.2f}".format(fitresults["fwhm_g141"])
-        + "{:>10.2f}".format(fitresults["fwhm_g141_error"])
-        + "{:>s}".format(str(comp_fit))
+        # + "{:>10.2f}".format(fitresults["fwhm_muse"])
+        # + "{:>10.2f}".format(fitresults["fwhm_muse_error"])
+        + "{:>13.3e}".format(fitresults["fwhm_g141"])
+        + "{:>13.3e}".format(fitresults["fwhm_g141_error"])
+        + "    " + "{:>s}".format(str(comp_fit))
         + "{:>10.5f}".format(fitresults["la_1216_dz"])
         + "{:>10.5f}".format(fitresults["c4_1548_dz"])
         + "{:>10.5f}".format(fitresults["uv_line_dz"])
