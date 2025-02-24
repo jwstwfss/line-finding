@@ -1,14 +1,29 @@
 # Documentation for line-finding code
 
-This software is used to identify line-emitting objects and measure emission line properties in JWST NIRISS WFSS Grism spectra, based on the pure-parallel survey PASSAGE (PID#1571). Installation instructions, including required packages, are in **passage_analysis/README.md** 
+This software is used to identify line-emitting objects and measure emission line properties in JWST NIRISS WFSS grism spectra, based on the pure-parallel survey PASSAGE (PID#1571). Installation instructions, including required packages, instructions for running the code, and 
 
-After installation, to run the software, simply go into the git cloned directory and run 
+
+**INSTALLATION:**  
+
+The simplest way to install the software is to clone this repo. 
+```git clone https://github.com/jwstwfss/line-finding```
+
+
+
+**RUNNING THE SOFTWARE:**  
+
+After installation, to run the software, simply go into the cloned directory and run 
 
 *python mainPASSAGE.py*
 
-The user will be asked to enter the number of a parallel field and a username of choice. The fitting is then performed on an object-by-object basis. 
+The user will be asked to enter the number of a parallel field and a username of choice (typically the user's name). The fitting is then performed on an object-by-object basis. 
 
 The following is a list of commands for this software.
+
+
+**Some Recommendations**
+We suggest you set some defaults in your own installation of DS9. If you go to Settings --> Preferences --> Menus and Buttons and then find the WCS menu and select Degrees, it will default to degrees every time you open DS9. You can also set other defaults in this way (e.g., zscale instead of min/max).
+
 
 **OBJECT SPECIFIC OPTIONS:**  
 
@@ -43,7 +58,7 @@ n = skip to next brightest line found in this object
 
 1gauss = option to go back to 1 gaussian fit after selecting 2 gaussian fit
 
-ha, hb, hg, o31, o32, o2, s2, s31, s32, lya, c4, pb, pa, pg = change strongest emission line
+ha, hb, hg, o31, o32, o2, s2, s31, s32, lya, c4, pa, pb, pg = change strongest emission line
 
 The full list of commands and corresponding lines are as follows
 
@@ -72,7 +87,7 @@ fw = change the fwhm guess in pixels
 
 t1, t2 = change transition wavelength between F115W and F150W (t1) and F150W and F200W (t2)  
 
-m1, m2, or m3 = mask up to three discontinuous wavelength regions  
+m1, m2, up to m8 = mask up to eight discontinuous wavelength regions. m1 and m2 are already set to the wavelength gaps between the three filters.  By default, m1 masks: 12830-13300Å and m2 masks: 16700-17510Å. To update these values for all objects, please update the default.config.
 
 nodes = change the wavelengths for the continuum spline nodes  
 
