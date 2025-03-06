@@ -6,7 +6,13 @@ This software is used to identify line-emitting objects and measure emission lin
 **INSTALLATION:**  
 
 The simplest way to install the software is to clone this repo. 
+
 ```git clone https://github.com/jwstwfss/line-finding```
+
+
+If you already have the code installed, but would like to pull the latest changes, please use the following 2 commands:
+
+```git pull``` followed by ```pip install -e  .```
 
 
 
