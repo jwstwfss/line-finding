@@ -36,6 +36,7 @@ from passage_analysis.fitting import (
     fit_obj,
     get_ratio_indices,
     get_fitpar_indices,
+    get_broad_indices,
 )
 
 # from fitting import fitandplot # MDR 2022/05/26 - Defined in fitting.py but not used so commented out.
