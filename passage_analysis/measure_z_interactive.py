@@ -1026,7 +1026,7 @@ def inspect_object(
     remaining,
     allobjects,
     show_dispersed=True,
-    stored_fits=False,
+    stored_fits = False,
     path_to_data=" ",
     path_to_output=" ",
     path_to_code=" ",
@@ -1269,19 +1269,39 @@ def inspect_object(
     index_of_strongest_line = 0
     lamline = lamlines_found[index_of_strongest_line]
 
-    # MDR 2022/06/10 - Changed the first guess line to [O II] for MUSE.
-    # KVN 2023/09/01 - Changed first guess back to Halpha for PASSAGE
-    zguess = lamline / ha_6565_vac - 1
-    # zguess = lamline / ((o2_3727_vac + o2_3730_vac) / 2.0) - 1.0
-    # zguess = (lamline / o2_3730_vac) - 1.0
-    # fwhm is defined for the red side, regardless of where line is
-    fwhm_guess = 2.35 * a_image * config_pars["dispersion_red"]
+    # Added KVN Feb 2025
+    # Include check if fit already exists so that it can be read in
+    path_to_pickle = (path_to_output
+                + "/Par" + str(par) + "_output_"
+                + str(user) + "/fitdata/PASSAGE_"
+                + str(obj) + "_fitspec.pickle")
 
+    print(path_to_output)
+    print('path_to_pickle:' , path_to_pickle)
+    print('user: ', path_to_pickle.split("/")[-3].split("_")[-1])
+    if os.path.exists(path_to_pickle) :
+        stored_fits = True
+        stored_fits_path = path_to_pickle
+    
+    if stored_fits == False:
+        # MDR 2022/06/10 - Changed the first guess line to [O II] for MUSE.
+        # KVN 2023/09/01 - Changed first guess back to Halpha for PASSAGE
+        zguess = lamline / ha_6565_vac - 1
+        # zguess = lamline / ((o2_3727_vac + o2_3730_vac) / 2.0) - 1.0
+        # zguess = (lamline / o2_3730_vac) - 1.0
+        # fwhm is defined for the red side, regardless of where line is
+        fwhm_guess = 2.35 * a_image * config_pars["dispersion_red"]
+
+    print('stored_fits: ', stored_fits)
     if stored_fits != False:
-        first_stored_fit = stored_fits[0]
-        users = [path.split("/")[-3].split("_")[-1] for path in stored_fits]
-        fileObject = open(first_stored_fit, "r")
-        alldata = pickle.load(fileObject)
+        first_stored_fit = path_to_pickle
+        users = path_to_pickle.split("/")[-3].split("_")[-1]
+        #fileObject = open(first_stored_fit, "r")
+
+        with open(first_stored_fit, 'rb') as pickle_file:
+            alldata = pickle.load(pickle_file)
+    
+        #alldata = pickle.load(fileObject)
         config_pars = alldata[10]
         fitresults_old = alldata[8]
         zguess = fitresults_old["redshift"]
@@ -2300,6 +2320,10 @@ def inspect_object(
             print_prompt("-" * 72)
             return 0
 
+        elif option.strip().lower() == "update":
+            print_prompt("Updating line list catalog", prompt_type="interim")
+            UpdateCatalog(outdir,linelistoutfile)
+
         # catch-all for everything else
         else:
             print_prompt("Invalid entry.  Try again.")
@@ -2470,7 +2494,8 @@ def measure_z_interactive(
     path_to_data=" ",
     path_to_code=" ",
     show_dispersed=True,
-    path_to_stored_fits=" ",
+    path_to_output=" ",
+    path_to_stored_fits =" ",
     print_colors=True,
     parno=0):
 
@@ -2486,14 +2511,15 @@ def measure_z_interactive(
         ### running from the Spectra directory
         path_to_data = "../../"
 
+
     # if path_to_stored_fits == ' ':
     #    use_stored_fits  = False
     # elif os.path.exists(path_to_stored_fits) :
     #    use_stored_fits = True
-    #    print 'looking for stored fit data'
+    #    print('looking for stored fit data')
     # else:
     #    use_stored_fits = False
-    #    print 'not using stored fit data'
+    #    print('not using stored fit data')
 
     #### STEP 0:   set ds9 window to tile mode ################################
     ###########################################################################
@@ -2897,9 +2923,10 @@ def measure_z_interactive(
             inpickles = []
             path_pickle1 = (
                 path_to_stored_fits
-                + "/Par"
-                + str(parnos[0])
-                + "_output_a/fitdata/Par0_"
+                + "/Par" + str(parnos[0])
+                + "_output_"
+                + str(user) 
+                +"fitdata/PASSAGE_"
                 + str(next_obj)
                 + "_fitspec.pickle"
             )
@@ -2961,7 +2988,7 @@ def measure_z_interactive(
                 allobjects,
                 show_dispersed=show_dispersed,
                 stored_fits=inpickles,
-                path_to_data=path_to_data, path_to_code=path_to_code)
+                path_to_data=path_to_data, path_to_code=path_to_code, path_to_output = path_to_output)
         else:
             inspect_object(
                 user,
@@ -2978,7 +3005,7 @@ def measure_z_interactive(
                 allobjects,
                 show_dispersed=show_dispersed,
                 stored_fits=False,
-                path_to_data=path_to_data, path_to_code=path_to_code)
+                path_to_data=path_to_data, path_to_code=path_to_code, path_to_output = path_to_output)
             # if len(glob.glob(path_to_wisp_data +'Par'+ str(parnos[0])+ '/Spectra/Par' +str(parnos[0])+ '_' + str(next_obj).zfill(5)+'*_R.dat')) > 0:
             #     inspect_object(
             #         user,

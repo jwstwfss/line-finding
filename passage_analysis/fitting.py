@@ -55,6 +55,8 @@ pa_18756_vac = 18756.1
 
 # adding more lines here:
 ne3_3869_vac = 3868.760
+fe3_1644_vac = 16440.00
+
 
 # Define the index number for each model parameter that will be fit by MPFIT.
 # This allows us to avoid hard-coding indices everywhere else within the code.
@@ -483,10 +485,10 @@ def emissionline_model(pars, x, comps, polycont, lincont):
         # initialize the continuum and emission line models as lists of zeros.
         cont_model = x * 0.
         line_model = x * 0.
+        
 
         # KVN (6-Aug-2024) - the continuum is now fit in separate function get_continuum_fit
-        cont_model = get_continuum_fit(pars, cont_model, x, first_node_index, nnodes, transition_wave, transition_wave2, fit_region, 
-                      la_1216_obs, pa_18756_obs, polycont, lincont)
+        cont_model = get_continuum_fit(pars, cont_model, x, first_node_index, nnodes, transition_wave, transition_wave2, fit_region, la_1216_obs, pa_18756_obs, polycont, lincont)
 
         ############################################################################
         #add_emission_line_to_model(la_1216_obs, la_1216_amp)
