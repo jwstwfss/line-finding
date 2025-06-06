@@ -1,9 +1,19 @@
-# Documentation for line-finding code
+# Line-finding Code Documentation 
 
-This software is used to identify line-emitting objects and measure emission line properties in JWST NIRISS WFSS grism spectra, based on the pure-parallel survey PASSAGE (PID#1571). Installation instructions, including required packages, instructions for running the code, and user input options can be found below.  
+This software is used to identify line-emitting objects and measure emission line properties in JWST NIRISS WFSS grism spectra, specifically from the pure-parallel survey PASSAGE (PID#1571). Installation instructions, including required packages, instructions for running the code, and user input options can be found below.  
 
 
 **INSTALLATION:**  
+
+Before installing, it is recommended that you create an environment with the following versions:
+python>=3.9
+numpy>=1.26.4
+astropy>=5.3, <7
+pandas>=1.0, <3
+scipy==1.14.1 (this one is strict)
+matplotlib>=3.6, <3.11
+
+For example: conda create --name myenv python=3.9 numpy=1.26.4 astropy=5.3 pandas=1.0 scipy=1.14.1 matplotlib=3.6 
 
 The simplest way to install the software is to clone this repo. 
 
