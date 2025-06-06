@@ -5,17 +5,23 @@ This software is used to identify line-emitting objects and measure emission lin
 
 **INSTALLATION:**  
 
-Before installing, it is recommended that you create an environment with the following versions:
+0. Before installing, it is recommended that you create an environment with the following versions:
+
 python>=3.9
+
 numpy>=1.26.4
+
 astropy>=5.3, <7
+
 pandas>=1.0, <3
+
 scipy==1.14.1 (this one is strict)
+
 matplotlib>=3.6, <3.11
 
 For example: conda create --name myenv python=3.9 numpy=1.26.4 astropy=5.3 pandas=1.0 scipy=1.14.1 matplotlib=3.6 
 
-The simplest way to install the software is to clone this repo. 
+1. The simplest way to install the software is to clone this repo. 
 
 ```git clone https://github.com/jwstwfss/line-finding```
 
