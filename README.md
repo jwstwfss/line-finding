@@ -19,9 +19,14 @@ This software is used to identify line-emitting objects and measure emission lin
 1. The simplest way to install the software is to clone this repo. <br>
     ```git clone https://github.com/jwstwfss/line-finding```
 
-    If you already have the code installed, but would like to pull the latest changes, please use the following 2 commands:
+    If you already have the code installed, but would like to pull the latest changes, please use the following 2 commands:<br>
     ```git pull``` followed by ```pip install -e  .```
 
+2. Dependencies - Currently, the code requies the following. <br>
+   **DS9**: which can be downloaded from https://sites.google.com/cfa.harvard.edu/saoimageds9/download <br>
+   **XPA**: which can be cloned from: https://github.com/ericmandel/xpa OR download XPA Version 2.1.20 from https://sites.google.com/cfa.harvard.edu/saoimageds9/download. Both methods provide instructions that should be followed.
+
+   [Note: running the line finding while on the eduroam network seems to cause strange errors in the communication between XPA & DS9.]
 
 
 **RUNNING THE SOFTWARE:**  
