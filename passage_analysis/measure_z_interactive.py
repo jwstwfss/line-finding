@@ -2551,7 +2551,7 @@ def measure_z_interactive(
     #### STEP 1b:   read the list of candidate lines  ####################
     ###########################################################################
 
-    llin = asciitable.read(linelistfile, names=["parnos", "grism", "objid", "wavelen", "npix", "ston"])
+    llin = asciitable.read(linelistfile, names=["parnos", "grism", "objid", "wavelen", "npix", "ston"], converters={"parnos": str})
 
     parnos = llin["parnos"]
     grism = llin["grism"]
