@@ -31,11 +31,19 @@ This software is used to identify line-emitting objects and measure emission lin
 
 **RUNNING THE SOFTWARE:**  
 
-After installation, to run the software, simply go into the cloned directory and run 
+After installation, the software can be simply run with 
 
-*python mainPASSAGE.py*
+```$ python mainPASSAGE.py```
 
-The user will be asked to enter the number of a parallel field and a username of choice (typically the user's name). The fitting is then performed on an object-by-object basis. 
+But! You should first ensure that you change the directories: <br>
+```
+    CODE_DIR = "/Users/knedkova/Work/2024PASSAGE/passage_analysis"
+    OUTPUT_DIR = "/Users/knedkova/Work/2024PASSAGE/output"
+    DATA_DIR = "/Users/knedkova/Work/2024PASSAGE/data/"
+```
+to match your directory structure. CODE_DIR should point to your installation of passage_analysis, OUTPUT_DIR will contain your outputs, and DATA_DIR is where your data is stored. 
+
+If this is all set up correctly, one you type ```$ python mainPASSAGE.py```, you will be asked to enter the number of a parallel field and a username of choice (typically the user's name). The fitting is then performed on an object-by-object basis. 
 
 The following is a list of commands for this software.
 
