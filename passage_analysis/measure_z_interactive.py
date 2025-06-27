@@ -104,6 +104,9 @@ pg_10941_vac = 10941.1
 pb_12822_vac = 12821.6
 pa_18756_vac = 18756.1
 ne3_3869_vac = 3868.760
+hd_4102_vac = 4101.734
+ne3_3968_he_3970_vac = 3970.0
+he1_5875_vac = 5875.624
 
 # Make all catalog header and data write commands loops over the 'flux_strings' variable.
 
@@ -139,8 +142,10 @@ supported_lines = [
     pg_10941_vac,
     pb_12822_vac,
     pa_18756_vac,
-    ne3_3869_vac
-]
+    ne3_3869_vac,
+    hd_4102_vac, 
+    ne3_3968_he_3970_vac, 
+    he1_5875_vac]
 
 # These lines are close to their doublets so are not plotted in ax1.
 # However, their fluxes and fitresults are still saved to the catalog.
@@ -163,7 +168,7 @@ supported_lines_strings = [
     "N V",
     "C IV",
     "He II",
-    "O III]",
+    "\n[O III]",
     "Si III]",
     "C III]",
     "Mg II",
@@ -183,7 +188,9 @@ supported_lines_strings = [
     r"P$\beta$",
     r"P$\alpha$",
     "[Ne III]",
-]
+    r"H$\delta$", 
+    r"H$\epsilon$+[Ne III]",
+    "He I"]
 
 flux_strings_1gauss = [
     "la_1216_wing",
@@ -209,8 +216,10 @@ flux_strings_1gauss = [
     "pg_10941",
     "pb_12822",
     "pa_18756",
-    "ne3_3869"
-]
+    "ne3_3869",
+    "hd_4102",
+    "ne3_3968_he_3970",
+    "he1_5875"]
 
 flux_strings_2gauss = [
     "la_1216_wing",
@@ -237,15 +246,17 @@ flux_strings_2gauss = [
     "pb_12822tot", "pb_12822nar", "pb_12822bro",
     "pa_18756tot", "pa_18756nar", "pa_18756bro",
     "ne3_3869tot", "ne3_3869nar", "ne3_3869bro",
-]
-# , 'pg_10941','pb_12822','pa_18756']
+    "hd_4102tot", "hd_4102nar", "hd_4102bro",
+    "ne3_3968_he_3970tot", "ne3_3968_he_3970nar", "ne3_3968_he_3970bro", 
+    "he1_5875tot", "he1_5875nar", "he1_5875bro",]
+    # , 'pg_10941','pb_12822','pa_18756']
 
 contam_flags_string = "la_1216, n5_1238, n5_1242, c4_1548, c4_1550, h2_1640, \
 o3_1660, o3_1666, s3_1883, s3_1892, c3_1907, c3_1909, \
 m2_2796, m2_2803, o2_3727, o2_3730, hg_4342, o3_4363, \
 h2_4686, hb_4863, o3_4959, o3_5007, o1_6300, o1_6363, \
 n2_6550, ha_6565, n2_6585, s2_6716, s2_6731, s3_9069, \
-s3_9532, he10830, pg_10941, pb_12822, pa_18756, ne3_3869, cont"
+s3_9532, he10830, pg_10941, pb_12822, pa_18756, ne3_3869, hd_4102, ne3_3968_he_3970, he1_5875, cont"
 
 # colors to help split up terminal output
 # helpmsg = light blue
@@ -546,8 +557,12 @@ def add_line_labels(ax, axtrans, xmin, xmax):
             ax.axvline(x=li, color="b")
             stringplot = lstring + "  (" + str(round(sn_meas, 1)) + ") "
             # use data coordinates for x-axis and axes coords for y-axis
-            ax.text(li, 0.92, stringplot, ha="right", fontsize="14", transform=axtrans)
-                # ax.set_title(stringplot, fontsize='14')
+            if lstring != "[O III]":
+                ax.text(li, 0.85, stringplot, ha="right", fontsize="14", transform=axtrans)
+                    # ax.set_title(stringplot, fontsize='14')
+            else:
+                ax.text(li, 0.85, stringplot, ha="left", fontsize="14", transform=axtrans)
+                    # ax.set_title(stringplot, fontsize='14')
     return "Added line label to", str(ax)
 
 def add_extra_lines(ax, axtrans, xmin, xmax):
@@ -639,7 +654,7 @@ def plot_chooseSpec(spdata1, spdata2, spdata3, config_pars, plottitle, outdir, z
         ax1.legend(bbox_to_anchor=[1.0, 1.08], loc="upper right")
 
     for ax in [ax1, ax2, ax3]:
-        ax.set_xlabel("Observed Wavelength ($\AA$)", size="xx-large")
+        ax.set_xlabel("Observed Wavelength (Å)", size="xx-large")
         # ax1.set_ylabel(r'F$_\lambda$ erg s$^{-1}$ cm$^{-2}$ $\AA^{-1}$', size='xx-large')
         ax.set_ylabel("Flux (erg s$^{-1}$ cm$^{-2}$ $\AA^{-1}$)", size="xx-large")
         ax.set_xlim([xmin, xmax])
@@ -781,8 +796,10 @@ def plot_object(zguess, zfit, spdata, config_pars, snr_meas_array, snr_tot_other
             stringplot = lstring  # + '  (' + str(round(sn_meas, 1)) + ') '
 
             # use data coordinates for x-axis and axes coords for y-axis
-            ax1.text(li, 0.85, stringplot, rotation="vertical",
-                ha="right", fontsize="16", transform=ax1trans)
+            if stringplot != "[O III]":
+                ax1.text(li, 0.8, stringplot, rotation="vertical", ha="right", fontsize="16", transform=ax1trans)
+            else:
+                ax1.text(li+70, 0.8, stringplot, rotation="vertical", ha="left", fontsize="16", transform=ax1trans)
 
     ax1.plot(spec_lam, full_fitmodel, color="r", lw=lw_fits)
     ax1.plot(spec_lam, full_contmodel, color="b", linestyle="--", lw=lw_fits)
@@ -817,9 +834,15 @@ def plot_object(zguess, zfit, spdata, config_pars, snr_meas_array, snr_tot_other
                 else:
                     maskedlabel = "masked regions"
                 ax.fill_between(config_pars[mr], 0, 1, color="grey", alpha=0.3, transform=trans, label=maskedlabel)
+                ax.tick_params(axis='both', labelsize=14)
+    ax1.fill_between(np.linspace(0,1), 0, -1, edgecolor='hotpink', facecolor="#ff69b4", alpha=0.2, step="pre", label='contamination')
     handles, labels = ax.get_legend_handles_labels()
     if len(labels) > 0:
-        ax1.legend(bbox_to_anchor=[1.0, 1.08], loc="upper right")
+        ax1.legend(bbox_to_anchor=[1.0, 1.08], loc="upper right", fontsize=16, ncol=2)
+
+    #KVN increase the scale of the scale... looks too small otherwise
+    offset_text = ax1.yaxis.get_offset_text()
+    offset_text.set_fontsize(14)         # Change font size
 
     # find values of spec_lam nearest to the nodes
     nodelam = config_pars["node_wave"]
@@ -845,9 +868,9 @@ def plot_object(zguess, zfit, spdata, config_pars, snr_meas_array, snr_tot_other
     current_cont = contmodel[np.argmin(np.abs(np.ma.compressed(masked_spec_lam) - current_lam))]
     ax1.plot(current_lam, current_cont, "ro", ms=10)
 
-    ax1.set_xlabel("Observed Wavelength ($\AA$)", size="xx-large")
+    ax2.set_xlabel("Observed Wavelength (Å)", size="xx-large")
     # ax1.set_ylabel(r'F$_\lambda$ erg s$^{-1}$ cm$^{-2}$ $\AA^{-1}$', size='xx-large')
-    ax1.set_ylabel("Flux (erg s$^{-1}$ cm$^{-2}$ $\AA^{-1}$)", size="xx-large")
+    ax1.set_ylabel("Flux (erg s$^{-1}$ cm$^{-2}$ Å$^{-1}$)", size="xx-large")
     ax1.set_xlim([xmin, xmax])
     ax1.set_ylim([ymin, ymax])
     ax1.set_title(plottitle, size="xx-large")
@@ -868,7 +891,7 @@ def plot_object(zguess, zfit, spdata, config_pars, snr_meas_array, snr_tot_other
     # ax2.axvline(x=config_pars['transition_wave'], c='c', linestyle=':', lw=3)
     # ax2.set_xlabel(r'$\lambda$ ($\AA$)', size='xx-large')
     # ax2.set_ylabel(r'S/N', size='xx-large')
-    ax2.set_title(r"S/N", size="xx-large")
+    ax2.set_ylabel(r"S/N", size="xx-large")
     ax2.set_xlim([xmin, xmax])
     ax2.set_ylim(ymin, ymax)
     # fig = plt.gcf() a
@@ -1063,7 +1086,7 @@ def inspect_object(
         specnameg2_C = (base_path + ".specG150_1D_C.dat")
         specnameg3_C = (base_path + ".specG200_1D_C.dat")
 
-    plottitle = "PASSAGE_%i" % (obj)
+    plottitle = "PASSAGE Par%s ID: %i" % (str(par), obj)
     fitdatafilename = os.path.join(outdir, "fitdata/%s_fitspec" % plottitle)
     availgrism = ""
     # read in 1D spectrum
@@ -1362,6 +1385,9 @@ def inspect_object(
         "pb_12822": 0,
         "pa_18756": 0,
         "ne3_3869": 0,
+        "hd_4102": 0,
+        "ne3_3968_he_3970": 0,
+        "he1_5875": 0,
         "cont": 0,
     }  # MDR 2022/07/22
 
@@ -3213,7 +3239,7 @@ def writeToCatalog(catalogname, parnos, objid, ra_obj, dec_obj,
         cat.write("fwhm_error  ")
         cat.write("double_comp  ")
         cat.write("la_1216_dz  ")
-        cat.write("la_1216_dz  ")
+        #cat.write("la_1216_dz  ")
         cat.write("c4_1548_dz  ")
         cat.write("uv_line_dz  ")
         cat.write("m2_2796_dz  ")
@@ -3271,9 +3297,10 @@ def writeToCatalog(catalogname, parnos, objid, ra_obj, dec_obj,
             "pg_10941",
             "pb_12822",
             "pa_18756", 
-            "ne3_3869"]
-
-        results_idx = 21
+            "ne3_3869", 
+            "hd_4102",
+            "ne3_3968_he_3970", 
+            "he1_5875"]
 
         for line in result_lines:
             # cat.write("#" + str(results_idx + 0) + " " + line + "_flux  ")
@@ -3286,7 +3313,6 @@ def writeToCatalog(catalogname, parnos, objid, ra_obj, dec_obj,
             cat.write(line + "_ew_obs  ")
             cat.write(line + "_ratio  ")
             cat.write(line + "_contam  ")
-            results_idx = results_idx + 5
 
         cat.write("\n")
         cat.close()
@@ -3381,8 +3407,8 @@ def writeToCatalog(catalogname, parnos, objid, ra_obj, dec_obj,
         + "{:>13.2e}".format(fitresults["o3_1660_1666_flux"])
         + "{:>13.2e}".format(fitresults["o3_1660_1666_error"])
         + "{:>13.2e}".format(fitresults["o3_1660_1666_ew_obs"])
-        + "{:<6d}".format(ratio)   # ratio = 0 ; added KVN 12/24
-        + "{:>7.2f}".format(np.max([contamflags["o3_1660"], contamflags["o3_1666"]]))
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24
+        + "{:>6d}".format(np.max([contamflags["o3_1660"], contamflags["o3_1666"]]))
         + "{:>13.2e}".format(fitresults["s3_1883_flux"])
         + "{:>13.2e}".format(fitresults["s3_1883_error"])
         + "{:>13.2e}".format(fitresults["s3_1883_ew_obs"])
@@ -3572,8 +3598,24 @@ def writeToCatalog(catalogname, parnos, objid, ra_obj, dec_obj,
         + "{:>13.2e}".format(fitresults["ne3_3869_ew_obs"])              # new line; Added KVN 02/2025 
         + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24       # new line; Added KVN 02/2025
         + "{:>6d}".format(contamflags["ne3_3869"])                       # new line; Added KVN 02/2025
+        + "{:>13.2e}".format(fitresults["hd_4102_flux"])                 # new line; Added KVN 06/2025
+        + "{:>13.2e}".format(fitresults["hd_4102_error"])                # new line; Added KVN 06/2025
+        + "{:>13.2e}".format(fitresults["hd_4102_ew_obs"])               # new line; Added KVN 06/2025 
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24       # new line; Added KVN 06/2025
+        + "{:>6d}".format(contamflags["hd_4102"])                        # new line; Added KVN 06/2025
+        + "{:>13.2e}".format(fitresults["ne3_3968_he_3970_flux"])        # new line; Added KVN 06/2025
+        + "{:>13.2e}".format(fitresults["ne3_3968_he_3970_error"])       # new line; Added KVN 06/2025
+        + "{:>13.2e}".format(fitresults["ne3_3968_he_3970_ew_obs"])      # new line; Added KVN 06/2025 
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24       # new line; Added KVN 06/2025
+        + "{:>6d}".format(contamflags["ne3_3968_he_3970"])               # new line; Added KVN 06/2025
+        + "{:>13.2e}".format(fitresults["he1_5875_flux"])        # new line; Added KVN 06/2025
+        + "{:>13.2e}".format(fitresults["he1_5875_error"])       # new line; Added KVN 06/2025
+        + "{:>13.2e}".format(fitresults["he1_5875_ew_obs"])      # new line; Added KVN 06/2025 
+        + "{:>7.2f}".format(ratio)   # ratio = 0 ; added KVN 12/24       # new line; Added KVN 06/2025
+        + "{:>6d}".format(contamflags["he1_5875"])               # new line; Added KVN 06/2025   
         + "\n"
     )
+
 
     """
     # if a row already exists for this object, comment it out
