@@ -586,7 +586,9 @@ def plot_chooseSpec(spdata1, spdata2, spdata3, config_pars, plottitle, outdir, z
     # previous figures are overwritten
     """
     # define the filename that will be used for figures.
-    plotfilename = os.path.join(outdir, "figs", "%s_fit_spectra.png" % (plottitle))
+    # plotfilename = os.path.join(outdir, "figs", "%s_fit_spectra.png" % (plottitle))
+    file_name = plottitle.split(' ')[0]+'_'+plottitle.split(' ')[1]+'_'+plottitle.split(' ')[-1]
+    plotfilename = os.path.join(outdir, "figs", "%s_fit_spectra.png" % (file_name))
 
     # initialize the wavelength, flux, uncertainty, contamination, and zero order arrays.
     if spdata1 != None:
@@ -680,7 +682,9 @@ def plot_object(zguess, zfit, spdata, config_pars, snr_meas_array, snr_tot_other
     lamobs_extra = (1 + zguess) * np.array(supported_lines_extra)
 
     # define the filename that will be used for figures.
-    plotfilename = os.path.join(outdir, "figs", "%s_fit%s.png" % (plottitle, orientation))
+    file_name = plottitle.split(' ')[0]+'_'+plottitle.split(' ')[1]+'_'+plottitle.split(' ')[-1]
+    plotfilename = os.path.join(outdir, "figs", "%s_fit_%s.png" % (file_name, orientation))
+    
 
     # initialize the wavelength, flux, uncertainty, contamination, and zero order arrays.
     spec_lam = spdata[0]
@@ -1087,7 +1091,8 @@ def inspect_object(
         specnameg3_C = (base_path + ".specG200_1D_C.dat")
 
     plottitle = "PASSAGE Par%s ID: %i" % (str(par), obj)
-    fitdatafilename = os.path.join(outdir, "fitdata/%s_fitspec" % plottitle)
+    fitdatafilename = os.path.join(outdir, "fitdata/PASSAGE_Par%s_%i_fitspec" % (str(par), obj))
+    
     availgrism = ""
     # read in 1D spectrum
     if os.path.exists(specnameg1):
@@ -1292,15 +1297,16 @@ def inspect_object(
 
     # Added KVN Feb 2025
     # Include check if fit already exists so that it can be read in
-    path_to_pickle = (path_to_output
+    path_to_pickle = (str(fitdatafilename) + ".pickle")
+
+    if os.path.exists(path_to_pickle) :
+        stored_fits = True
+        stored_fits_path = path_to_pickle
+    elif os.path.exists(path_to_output
                 + "/Par" + str(par) + "_output_"
                 + str(user) + "/fitdata/PASSAGE_"
-                + str(obj) + "_fitspec.pickle")
-
-    print(path_to_output)
-    print('path_to_pickle:' , path_to_pickle)
-    print('user: ', path_to_pickle.split("/")[-3].split("_")[-1])
-    if os.path.exists(path_to_pickle) :
+                + str(obj) + "_fitspec.pickle"):
+        path_to_pickle = (path_to_output + "/Par" + str(par) + "_output_" + str(user) + "/fitdata/PASSAGE_" + str(obj) + "_fitspec.pickle")
         stored_fits = True
         stored_fits_path = path_to_pickle
     
@@ -1313,7 +1319,7 @@ def inspect_object(
         # fwhm is defined for the red side, regardless of where line is
         fwhm_guess = 2.35 * a_image * config_pars["dispersion_red"]
 
-    print('stored_fits: ', stored_fits)
+    print('stored_fits: ', stored_fits, path_to_pickle)
     if stored_fits != False:
         first_stored_fit = path_to_pickle
         users = path_to_pickle.split("/")[-3].split("_")[-1]
@@ -1327,9 +1333,8 @@ def inspect_object(
         fitresults_old = alldata[8]
         zguess = fitresults_old["redshift"]
         fwhm_guess = fitresults_old["fwhm_g141"]
-        print("using stored fit from: " + users[0])
+        print("using stored fit at redshift z = " + str(zguess))
         print("available stored fits: ")
-        print(users)
         ### also need to figure out what else to add?
         ### config pars for nodes can also be entered here.
 
@@ -2386,83 +2391,52 @@ def inspect_object(
             # sqlite3 database support - automatically creates and initializes DB if required
             # databaseManager.saveCatalogueEntry(databaseManager.layoutCatalogueData(par, obj, ra[0], dec[0], a_image[0],
             #                                                                       b_image[0], jmag[0], hmag[0], fitresults, flagcont))
-            if comp_fit == False:
-                writeToCatalog(
-                    linelistoutfile,
-                    par,
-                    obj,
-                    ra,
-                    dec,
-                    a_image,
-                    b_image,
-                    jmag,
-                    hmag,
-                    snr_tot_others,
-                    fitresults,
-                    contamflags,
-                    comp_fit
-                )
+            
+            writeToCatalog(
+                linelistoutfile,
+                par,
+                obj,
+                ra,
+                dec,
+                a_image,
+                b_image,
+                jmag,
+                hmag,
+                snr_tot_others,
+                fitresults,
+                contamflags,
+                comp_fit
+            )
         
-                writeFitdata(
-                    fitdatafilename,
-                    spec_lam,
-                    spec_val,
-                    spec_unc,
-                    spec_con,
-                    spec_zer,
-                    full_fitmodel,
-                    full_contmodel,
-                    mask_flg,
-                )
+            writeFitdata(
+                fitdatafilename,
+                spec_lam,
+                spec_val,
+                spec_unc,
+                spec_con,
+                spec_zer,
+                full_fitmodel,
+                full_contmodel,
+                mask_flg,
+            )
         
-                fitspec_pickle = open(fitdatafilename + ".pickle", "wb")
-                output_meta_data = [
-                    par,
-                    obj,
-                    ra,
-                    dec,
-                    a_image,
-                    b_image,
-                    jmag,
-                    hmag,
-                    fitresults,
-                    flagcont,
-                    config_pars,
-                ]
-                pickle.dump(output_meta_data, fitspec_pickle)
-                fitspec_pickle.close()
-            elif comp_fit == True:
-                writeToCatalog2gauss(
-                    linelistoutfile, par, obj,ra, dec, a_image, b_image,
-                    jmag, hmag, snr_tot_others, fitresults, contamflags, comp_fit)
-    
-                writeFitdata(
-                    fitdatafilename,
-                    spec_lam,
-                    spec_val,
-                    spec_unc,
-                    spec_con,
-                    spec_zer,
-                    full_fitmodel,
-                    full_contmodel,
-                    mask_flg)
-    
-                fitspec_pickle = open(fitdatafilename + ".pickle", "wb")
-                output_meta_data = [
-                    par,
-                    obj,
-                    ra,
-                    dec,
-                    a_image,
-                    b_image,
-                    jmag,
-                    hmag,
-                    fitresults,
-                    flagcont,
-                    config_pars,
-                ]
-                pickle.dump(output_meta_data, fitspec_pickle)
-                fitspec_pickle.close()
+            fitspec_pickle = open(fitdatafilename + ".pickle", "wb")
+            output_meta_data = [
+                par,
+                obj,
+                ra,
+                dec,
+                a_image,
+                b_image,
+                jmag,
+                 hmag,
+                fitresults,
+                flagcont,
+                config_pars,
+            ]
+            pickle.dump(output_meta_data, fitspec_pickle)
+            fitspec_pickle.close()
+
         
         # else:
         #     # done == 1, but zset == 0 => rejected

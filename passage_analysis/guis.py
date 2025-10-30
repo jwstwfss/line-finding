@@ -123,11 +123,12 @@ def find_file(directory, filename):
 def showDirect_PASSAGE(parno, path_to_data=""):
     """Displays direct images for each of the filters"""
 
-    ### KVN's quick fix to images having different names in different fields
-    # specify the images to be displayed in DS9
-    grism_file = glob(path_to_data + '/Par'+str(parno)+'/DATA/*gr150*_drz_sci.fits')
-    grism_file = str(grism_file[0]).split(path_to_data)[1]
-    grism_file_ext = str(grism_file).split('_')[1]
+    # ### KVN's quick fix to images having different names in different fields
+    # # specify the images to be displayed in DS9
+    # grism_file = glob(path_to_data + '/Par'+str(parno)+'/DATA/*gr150*_drz_sci.fits')
+    # print('grism_file = ', grism_file)
+    # grism_file = str(grism_file[0]).split(path_to_data)[1]
+    # grism_file_ext = str(grism_file).split('_')[1]
 
     # specify the images to be displayed in DS9
     images = {
@@ -170,7 +171,7 @@ def showDirect_PASSAGE(parno, path_to_data=""):
         paths = []
         for filename in filenames:
             full_path = find_file(path_to_data, filename)
-            # print(full_path)
+            print(full_path)
             if full_path:
                 paths.append(full_path)
             else:
