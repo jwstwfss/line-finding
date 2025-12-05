@@ -7,12 +7,12 @@ This software is used to identify line-emitting objects and measure emission lin
 
 0. Before installing, it is recommended that you create an environment with the following versions:
 
-    python>=3.9<br>
+    python>=3.11<br>
     numpy>=1.26.4<br>
-    astropy>=5.3, <7<br>
-    pandas>=1.0, <3<br>
+    astropy>=6.1.0, <7<br>
+    pandas>=2.3.1, <3<br>
     scipy==1.14.1 (this one is strict)<br>
-    matplotlib>=3.6, <3.11<br>
+    matplotlib>=3.9.2, <3.11<br>
 
     For example: conda create --name myenv python=3.11 numpy=1.26.4 astropy=5.7 pandas=1.0 scipy=1.14.1 matplotlib=3.11
 
