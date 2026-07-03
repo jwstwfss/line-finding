@@ -198,24 +198,8 @@ def add_header_keyword(parno, path_to_data):
 
             hdulist.writeto(j, overwrite='True')
 
-def make_spectra_dat_files(parno, path_to_data):
-
-    main_directory = os.path.join(path_to_data, f"Par{parno:s}")
-    spec1D_directory = os.path.join(main_directory, "spec1D")
-
-    os.system(f"mkdir -p {os.path.join(main_directory, 'Spectra'):s}")
-
-    files = sorted(glob.glob(os.path.join(spec1D_directory, '*1D.fits')))
-
-    # Check if converted files already exist. If they do not, carry on with the conversion.
-    # Otherwise, this step can be skipped.
-    # Here, I just check if there are more converted files than objects (there can be 1-3 per object)
-    # depending on how many filters are available for each object
-
-    print('\nThere are ' + str(len(files)) + ' PASSAGE files to convert.\n')
-    for f in files:
-
-        fff = fits.open(f)
+def _make_spec_dat(f, main_directory="./"):
+    with fits.open(f) as fff:
         print(f)
 
         for ext in range(1, len(fff)):
@@ -263,3 +247,32 @@ def make_spectra_dat_files(parno, path_to_data):
                                 os.path.basename(f).replace('1D.fits', f'G{filt:s}_1D_{orient:s}.dat')),
                             format='ascii.fixed_width_two_line', overwrite=True)
 
+
+def make_spectra_dat_files(parno, path_to_data):
+
+    import multiprocessing as mp
+
+    main_directory = os.path.join(path_to_data, f"Par{parno:s}")
+    spec1D_directory = os.path.join(main_directory, "spec1D")
+
+    os.system(f"mkdir -p {os.path.join(main_directory, 'Spectra'):s}")
+
+    files = sorted(glob.glob(os.path.join(spec1D_directory, '*1D.fits')))
+
+    # Check if converted files already exist. If they do not, carry on with the conversion.
+    # Otherwise, this step can be skipped.
+    # Here, I just check if there are more converted files than objects (there can be 1-3 per object)
+    # depending on how many filters are available for each object
+
+    print('\nThere are ' + str(len(files)) + ' PASSAGE files to convert.\n')
+    # -4 on core count to avoid using all computing resources
+    with mp.Pool(max(mp.cpu_count()-4, 1)) as pool:
+        for f in files:
+            pool.apply_async(
+                _make_spec_dat,
+                args = (f,),
+                kwds = {"main_directory" : main_directory}
+            )
+
+        pool.close()
+        pool.join()
